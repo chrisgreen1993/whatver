@@ -3,6 +3,8 @@
 const { promisify } = require("util");
 const { exec } = require("child_process");
 const { satisfies } = require("semver");
+const columns = require("cli-columns");
+const chalk = require("chalk");
 
 const execCommand = promisify(exec);
 
@@ -17,11 +19,12 @@ const parseArguments = (args) => args.slice(-2);
   try {
     const [pkgName, semverRange] = parseArguments(args);
     const versions = await fetchPackageVersions(pkgName);
-    const validVersions = versions.filter(version => satisfies(version, semverRange));
-    console.log(`Versions of ${pkgName} that satisfy ${semverRange}`)
-    validVersions.forEach(version => console.log(version));
+    const colouredValidVersions = versions.map(version => (
+      satisfies(version, semverRange) ? chalk.green(version) : version
+    ));
+    console.log(columns(colouredValidVersions, { sort: false }));
   } catch (error) {
-    console.error(error.message)
+    console.error(error.message);
   }
 
 })(process.argv);
