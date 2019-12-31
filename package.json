@@ -2,13 +2,13 @@
   "name": "whatver",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Chris Green",
   "license": "ISC",
-  "bin": "index.js",
+  "bin": "cli.js",
   "dependencies": {
     "chalk": "^3.0.0",
     "cli-columns": "^3.1.2",

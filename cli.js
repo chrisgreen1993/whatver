@@ -1,24 +1,13 @@
 #! /usr/bin/env node
-
-const { promisify } = require("util");
-const { exec } = require("child_process");
-const { satisfies } = require("semver");
+const allVersions = require("./lib");
 const columns = require("cli-columns");
 const chalk = require("chalk");
 
 const USAGE_TEXT = `
 Usage: whatver [package name] [semver range]
 
-Example: whatver lodash ^1.1
+Example: whatver lodash "^1.1"
 `;
-
-
-const execCommand = promisify(exec);
-
-const fetchPackageVersions = async (pkgName) => {
-  const { stdout } = await execCommand(`npm view ${pkgName} versions --json`);
-  return JSON.parse(stdout);
-}
 
 const parseArguments = (args) => {
   const [,, ...programArgs] = args;
@@ -28,14 +17,14 @@ const parseArguments = (args) => {
 (async (args) => {
   try {
     const programArgs = parseArguments(args);
-    if (!programArgs.length) {
+    if (!programArgs.length || programArgs[0] === "--help") {
       console.log(USAGE_TEXT);
-      process.exit(0);
+      return;
     }
     const [pkgName, semverRange] = programArgs;
-    const versions = await fetchPackageVersions(pkgName);
+    const versions = await allVersions(pkgName, semverRange);
     const colouredValidVersions = versions.map(version => (
-      satisfies(version, semverRange) ? chalk.green(version) : version
+      version.satisfies ? chalk.green(version.version) : version.version
     ));
     console.log(columns(colouredValidVersions, { sort: false }));
   } catch (error) {
