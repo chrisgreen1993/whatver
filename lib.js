@@ -11,5 +11,5 @@ const fetchPackageVersions = async (pkgName) => {
 
 module.exports = async (pkgName, semverRange)  => {
   const versions = await fetchPackageVersions(pkgName);
-  return versions.map(version => ({ version, satisfies: satisfies(version, semverRange) }));
+  return versions.map(version => ({ version, satisfied: satisfies(version, semverRange) }));
 }

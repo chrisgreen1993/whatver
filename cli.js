@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-const allVersions = require("./lib");
+const checkVersions = require("./lib");
 const columns = require("cli-columns");
 const chalk = require("chalk");
 
@@ -14,6 +14,12 @@ const parseArguments = (args) => {
   return programArgs;
 }
 
+const colourValidVersions = (versions) => (
+  versions.map(({ version, satisfied }) => (
+    satisfied ? chalk.green(version) : version)
+  )
+);
+
 (async (args) => {
   try {
     const programArgs = parseArguments(args);
@@ -22,11 +28,9 @@ const parseArguments = (args) => {
       return;
     }
     const [pkgName, semverRange] = programArgs;
-    const versions = await allVersions(pkgName, semverRange);
-    const colouredValidVersions = versions.map(version => (
-      version.satisfies ? chalk.green(version.version) : version.version
-    ));
-    console.log(columns(colouredValidVersions, { sort: false }));
+    const versions = await checkVersions(pkgName, semverRange);
+    const versionsWithColour = colourValidVersions(versions);
+    console.log(columns(versionsWithColour, { sort: false }));
   } catch (error) {
     console.error(error.message);
   }
