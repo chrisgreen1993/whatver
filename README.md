@@ -2,28 +2,20 @@
 
 https://semver.npmjs.com/ for your terminal
 
-## Install
-
-```bash
-npm install -g whatver
-```
-
 ## Usage
 
 ```bash
-whatver lodash "^4.14"
+npx whatver lodash "^4.14"
 ```
 ![screenshot](screenshot.png)
 
 ### As a module
 
-```js
-const checkVersions = require("whatver")
+```typescript
+import checkVersions from "whatver";
 
-checkVersions("lodash", "^4.14").then((versionInfo) => {
-  // Returns Promise witharray of { version: String, satisfied: Boolean } pairs for all versions
-  // E.g [{ version: "4.15.0", satisfied: true }]
-  console.log(versionInfo)
-})
+const versionInfo = await checkVersions("lodash", "^4.14");
+// Returns array of { version: string, satisfied: boolean } pairs for all versions
+// E.g [{ version: "4.15.0", satisfied: true }]
+console.log(versionInfo);
 ```
-

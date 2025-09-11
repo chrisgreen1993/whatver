@@ -2,16 +2,27 @@
   "name": "whatver",
   "version": "1.0.0",
   "description": "",
-  "main": "lib.js",
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "type": "module",
   "scripts": {
+    "build:cli": "bun build src/cli.ts --outdir dist --target node",
+    "build:lib": "bun build src/lib.ts --outdir dist --target node",
+    "build": "bun run build:cli && bun run build:lib",
+    "type-check": "bun run tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Chris Green",
   "license": "ISC",
-  "bin": "cli.js",
+  "bin": "dist/cli.js",
   "dependencies": {
     "chalk": "^5.6.2",
     "cli-columns": "^4.0.0",
     "semver": "^7.7.2"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.21",
+    "@types/semver": "^7.7.1",
+    "typescript": "^5.9.2"
   }
 }

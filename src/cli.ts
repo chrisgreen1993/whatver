@@ -1,7 +1,7 @@
-#! /usr/bin/env node
-const checkVersions = require("./lib");
-const columns = require("cli-columns");
-const { default: chalk } = require("chalk");
+import checkVersions from "./lib.js";
+import columns from "cli-columns";
+import chalk from "chalk";
+import type { VersionInfo } from "./types.js";
 
 const USAGE_TEXT = `
 Usage: whatver [package name] [semver range]
@@ -9,30 +9,30 @@ Usage: whatver [package name] [semver range]
 Example: whatver lodash "^1.1"
 `;
 
-const parseArguments = (args) => {
+const parseArguments = (args: string[]): string[] => {
   const [,, ...programArgs] = args;
   return programArgs;
 }
 
-const colourValidVersions = (versions) => (
+const colourValidVersions = (versions: VersionInfo[]): string[] => (
   versions.map(({ version, satisfied }) => (
     satisfied ? chalk.green(version) : version)
   )
 );
 
-(async (args) => {
+(async (args: string[]) => {
   try {
     const programArgs = parseArguments(args);
-    if (!programArgs.length || programArgs[0] === "--help") {
+    const [pkgName, semverRange] = programArgs;
+    if (!programArgs.length || programArgs[0] === "--help" || !pkgName) {
       console.log(USAGE_TEXT);
       return;
     }
-    const [pkgName, semverRange] = programArgs;
     const versions = await checkVersions(pkgName, semverRange);
     const versionsWithColour = colourValidVersions(versions);
     console.log(columns(versionsWithColour, { sort: false }));
   } catch (error) {
-    console.error(error.message);
+    console.error(error instanceof Error ? error.message : error);
   }
 
 })(process.argv);

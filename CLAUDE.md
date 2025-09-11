@@ -4,72 +4,113 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**whatver** is a CLI tool and Node.js module that checks npm package versions against semver ranges. It provides both a command-line interface and a programmatic API to determine which versions of an npm package satisfy a given semver constraint, with colored output to highlight valid versions.
+**whatver** is a modern CLI tool and Node.js module built with TypeScript and Bun that checks npm package versions against semver ranges. It provides both a command-line interface and a programmatic API to determine which versions of an npm package satisfy a given semver constraint, with colored output to highlight valid versions.
 
 ## Architecture
 
-The project follows a simple two-file architecture:
+The project follows a modern TypeScript architecture with source and build separation:
 
-- **lib.js**: Core module that exports the main functionality
+### Source Files (src/)
+- **src/lib.ts**: Core module that exports the main functionality
   - Uses `npm view` command to fetch package versions from npm registry
   - Leverages the `semver` library to validate versions against ranges
-  - Returns array of `{version, satisfied}` objects
+  - Returns array of `{version, satisfied}` objects with proper TypeScript typing
   
-- **cli.js**: Command-line interface wrapper
-  - Handles argument parsing and validation  
+- **src/cli.ts**: Command-line interface wrapper
+  - Handles argument parsing and validation with TypeScript types
   - Uses `chalk` for colored terminal output (green for valid versions)
   - Uses `cli-columns` for formatted multi-column display
   - Contains usage text and error handling
+  
+- **src/shared-types.ts**: Shared TypeScript interfaces used across modules
+- **src/types.d.ts**: Local type definitions for packages without official types
+
+### Build Output (dist/)
+- Compiled JavaScript files with declaration files (.d.ts)
+- Source maps for debugging
+
+## Development Environment
+
+### DevBox Setup
+This project uses DevBox with direnv for reproducible development environments:
+```bash
+# DevBox will automatically activate when entering the directory (via direnv)
+# Or manually activate with:
+devbox shell
+
+# Bun is available in the DevBox environment
+bun --version
+```
 
 ## Development Commands
 
 ### Install Dependencies
 ```bash
-npm install
+bun install
 ```
 
-### Run the CLI Tool
+### Build TypeScript
 ```bash
-node cli.js <package-name> "<semver-range>"
-# Example: node cli.js lodash "^4.14"
+bun run build        # Build with Bun bundler + generate TypeScript declarations
 ```
 
-### Install Globally for Development
+### Run Development Version
 ```bash
-npm install -g .
-# Then use: whatver lodash "^4.14"
+bun run dev <package-name> "<semver-range>"
+# Example: bun run dev lodash "^4.14"
+```
+
+### Run Compiled Version
+```bash
+bun run start <package-name> "<semver-range>"
+# Example: bun run start lodash "^4.14"
+```
+
+### Type Checking
+```bash
+bun run typecheck    # Check types without emitting files
 ```
 
 ### Testing
 Currently no test framework is configured. The package.json shows:
 ```bash
-npm test  # Will output "Error: no test specified" and exit 1
+bun test  # Will output "Error: no test specified" and exit 1
 ```
 
 ## Dependencies
 
+### Runtime Dependencies
 - **chalk**: Terminal string styling (colors) - v5.6.2
 - **cli-columns**: Multi-column terminal output formatting - v4.0.0
 - **semver**: Semantic versioning utilities for validation - v7.7.2
 
-Note: Chalk v5+ uses ES modules, requiring `const { default: chalk } = require("chalk")` import syntax.
+### Development Dependencies  
+- **typescript**: TypeScript compiler - v5.9.2
+- **@types/bun**: Bun runtime type definitions (includes Node.js compatibility) - v1.2.21
+- **@types/semver**: Semver type definitions - v7.7.1
+
+### Type Definitions
+- **src/types.d.ts**: Local type definitions for cli-columns (no official types available)
 
 ## Module Usage
 
-The library can be imported and used programmatically:
+The library can be imported and used programmatically with full TypeScript support:
 
-```javascript
-const checkVersions = require("./lib");
+```typescript
+import checkVersions from "./lib.js";
 
-checkVersions("lodash", "^4.14").then((versionInfo) => {
-  // Returns array of { version: String, satisfied: Boolean }
-  console.log(versionInfo);
-});
+const versionInfo = await checkVersions("lodash", "^4.14");
+// Returns Promise<VersionInfo[]> where VersionInfo = { version: string, satisfied: boolean }
+console.log(versionInfo);
 ```
 
 ## Key Implementation Details
 
+- **TypeScript**: Full type safety with interfaces for all data structures
+- **Bun Runtime**: Modern JavaScript runtime with fast startup and built-in TypeScript support
+- **DevBox Environment**: Reproducible development environment with automatic activation via direnv
+- **ESM Imports**: Modern ES module imports in TypeScript source
+- **Build Pipeline**: Bun bundler for fast compilation + TypeScript for declaration files and type checking
 - **npm Integration**: Uses `npm view <package> versions --json` to fetch all available versions
 - **Async/Await**: Modern async patterns with promisified child_process.exec
-- **Error Handling**: CLI catches and displays error messages appropriately
-- **No Build Process**: Pure Node.js without transpilation or bundling
+- **Error Handling**: CLI catches and displays error messages with proper TypeScript error typing
