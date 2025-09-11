@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 const checkVersions = require("./lib");
 const columns = require("cli-columns");
-const chalk = require("chalk");
+const { default: chalk } = require("chalk");
 
 const USAGE_TEXT = `
 Usage: whatver [package name] [semver range]

@@ -48,9 +48,11 @@ npm test  # Will output "Error: no test specified" and exit 1
 
 ## Dependencies
 
-- **chalk**: Terminal string styling (colors)
-- **cli-columns**: Multi-column terminal output formatting  
-- **semver**: Semantic versioning utilities for validation
+- **chalk**: Terminal string styling (colors) - v5.6.2
+- **cli-columns**: Multi-column terminal output formatting - v4.0.0
+- **semver**: Semantic versioning utilities for validation - v7.7.2
+
+Note: Chalk v5+ uses ES modules, requiring `const { default: chalk } = require("chalk")` import syntax.
 
 ## Module Usage
 
