@@ -10,7 +10,14 @@
     "build:lib": "bun build src/lib.ts --outdir dist --target node",
     "build": "bun run build:cli && bun run build:lib",
     "type-check": "bun run tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "biome lint src",
+    "lint:fix": "biome lint src --write",
+    "format": "biome format src",
+    "format:fix": "biome format src --write",
+    "check": "biome check src",
+    "check:fix": "biome check src --write"
+
   },
   "author": "Chris Green",
   "license": "ISC",
@@ -21,6 +28,7 @@
     "semver": "^7.7.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.4",
     "@types/bun": "^1.2.21",
     "@types/semver": "^7.7.1",
     "typescript": "^5.9.2"

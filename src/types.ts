@@ -1,4 +1,4 @@
 export interface VersionInfo {
-  version: string;
-  satisfied: boolean;
+	version: string;
+	satisfied: boolean;
 }
