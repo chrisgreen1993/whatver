@@ -11,22 +11,22 @@ function isStringArray(value: unknown): value is string[] {
 	);
 }
 
-const fetchPackageVersions = async (pkgName: string): Promise<string[]> => {
+async function fetchPackageVersions(pkgName: string): Promise<string[]> {
 	const { stdout } = await execCommand(`npm view ${pkgName} versions --json`);
 	const parsed = JSON.parse(stdout);
 	if (isStringArray(parsed)) {
 		return parsed;
 	}
 	throw new Error("Invalid npm versions response format");
-};
+}
 
-export default async (
+export default async function checkVersions(
 	pkgName: string,
 	semverRange?: string,
-): Promise<VersionInfo[]> => {
+): Promise<VersionInfo[]> {
 	const versions = await fetchPackageVersions(pkgName);
 	return versions.map((version) => ({
 		version,
 		satisfied: semverRange ? satisfies(version, semverRange) : false,
 	}));
-};
+}

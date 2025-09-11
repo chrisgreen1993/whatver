@@ -9,15 +9,16 @@ Usage: whatver [package name] [semver range]
 Example: whatver lodash "^1.1"
 `;
 
-const parseArguments = (args: string[]): string[] => {
+function parseArguments(args: string[]): string[] {
 	const [, , ...programArgs] = args;
 	return programArgs;
-};
+}
 
-const colourValidVersions = (versions: VersionInfo[]): string[] =>
-	versions.map(({ version, satisfied }) =>
+function colourValidVersions(versions: VersionInfo[]): string[] {
+	return versions.map(({ version, satisfied }) =>
 		satisfied ? chalk.green(version) : version,
 	);
+}
 
 (async (args: string[]) => {
 	try {
