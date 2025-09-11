@@ -1,23 +1,51 @@
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
+import type { Manifest } from "@npm/types";
 import { satisfies } from "semver";
 import type { VersionInfo } from "./types.js";
 
-const execCommand = promisify(exec);
-
-function isStringArray(value: unknown): value is string[] {
+// Not a comprehensive check, but good enough for our use case
+function isNpmManifest(data: unknown): data is Manifest {
 	return (
-		Array.isArray(value) && value.every((item) => typeof item === "string")
+		typeof data === "object" &&
+		data !== null &&
+		"versions" in data &&
+		typeof data.versions === "object"
 	);
 }
 
 async function fetchPackageVersions(pkgName: string): Promise<string[]> {
-	const { stdout } = await execCommand(`npm view ${pkgName} versions --json`);
-	const parsed = JSON.parse(stdout);
-	if (isStringArray(parsed)) {
-		return parsed;
+	const registryUrl = `https://registry.npmjs.org/${encodeURIComponent(pkgName)}`;
+
+	try {
+		const response = await fetch(registryUrl, {
+			headers: {
+				// This gives us a smaller abbreviated manifest
+				// See here: https://github.com/npm/registry/blob/main/docs/responses/package-metadata.md
+				Accept: "application/vnd.npm.install-v1+json",
+			},
+		});
+
+		if (!response.ok) {
+			if (response.status === 404) {
+				throw new Error(`Package '${pkgName}' not found in npm registry`);
+			}
+			throw new Error(
+				`Failed to fetch package info: ${response.status} ${response.statusText}`,
+			);
+		}
+
+		const data = await response.json();
+
+		if (!isNpmManifest(data)) {
+			throw new Error("Invalid npm registry response format");
+		}
+
+		return Object.keys(data.versions);
+	} catch (error) {
+		throw new Error(
+			`Failed to fetch package versions: ${error instanceof Error ? error.message : error}`,
+			{ cause: error },
+		);
 	}
-	throw new Error("Invalid npm versions response format");
 }
 
 export default async function checkVersions(

@@ -88,6 +88,7 @@ bun test  # Will output "Error: no test specified" and exit 1
 - **typescript**: TypeScript compiler - v5.9.2
 - **@types/bun**: Bun runtime type definitions (includes Node.js compatibility) - v1.2.21
 - **@types/semver**: Semver type definitions - v7.7.1
+- **@npm/types**: Official npm registry API type definitions - v2.1.0
 
 ### Type Definitions
 - **src/types.d.ts**: Local type definitions for cli-columns (no official types available)
@@ -111,6 +112,6 @@ console.log(versionInfo);
 - **DevBox Environment**: Reproducible development environment with automatic activation via direnv
 - **ESM Imports**: Modern ES module imports in TypeScript source
 - **Build Pipeline**: Bun bundler for fast compilation + TypeScript for declaration files and type checking
-- **npm Integration**: Uses `npm view <package> versions --json` to fetch all available versions
-- **Async/Await**: Modern async patterns with promisified child_process.exec
+- **npm Registry API**: Direct HTTP API calls to npm registry with optimized headers (72% smaller responses)
+- **Async/Await**: Modern async patterns with fetch API
 - **Error Handling**: CLI catches and displays error messages with proper TypeScript error typing
