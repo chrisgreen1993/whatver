@@ -1,6 +1,6 @@
 {
   "name": "whatver",
-  "version": "1.0.0",
+  "version": "2.0.0-alpha.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -31,5 +31,8 @@
     "@types/bun": "^1.2.21",
     "@types/semver": "^7.7.1",
     "typescript": "^5.9.2"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
