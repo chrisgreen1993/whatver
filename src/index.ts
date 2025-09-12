@@ -1,6 +1,6 @@
 import type { Manifest } from "@npm/types";
 import { satisfies, sort, validRange } from "semver";
-import type { VersionInfo } from "./types.js";
+import type { VersionInfo } from "./types";
 
 // Not a comprehensive check, but good enough for our use case
 function isNpmManifest(data: unknown): data is Manifest {

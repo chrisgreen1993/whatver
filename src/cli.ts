@@ -1,7 +1,9 @@
+#!/usr/bin/env node
+
 import chalk from "chalk";
 import columns from "cli-columns";
-import checkVersions from "./lib.js";
-import type { VersionInfo } from "./types.js";
+import checkVersions from "./index";
+import type { VersionInfo } from "./types";
 
 const USAGE_TEXT = `
 Usage: whatver [package name] [semver range]

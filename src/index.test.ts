@@ -7,7 +7,7 @@ import {
 	type Mock,
 	mock,
 } from "bun:test";
-import checkVersions from "./lib.js";
+import checkVersions from "./index";
 
 let mockFetch: Mock<() => Promise<Response>>;
 
