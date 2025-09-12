@@ -10,7 +10,7 @@
     "build:lib": "bun build src/lib.ts --outdir dist --target node",
     "build": "bun run build:cli && bun run build:lib",
     "type-check": "bun run tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "bun test",
     "lint": "biome lint src",
     "lint:fix": "biome lint src --write",
     "format": "biome format src",

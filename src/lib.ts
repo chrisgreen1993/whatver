@@ -1,5 +1,5 @@
 import type { Manifest } from "@npm/types";
-import { satisfies } from "semver";
+import { satisfies, sort, validRange } from "semver";
 import type { VersionInfo } from "./types.js";
 
 // Not a comprehensive check, but good enough for our use case
@@ -52,8 +52,14 @@ export default async function checkVersions(
 	pkgName: string,
 	semverRange?: string,
 ): Promise<VersionInfo[]> {
+	if (semverRange && !validRange(semverRange)) {
+		throw new Error(`Invalid semver range: ${semverRange}`);
+	}
+
 	const versions = await fetchPackageVersions(pkgName);
-	return versions.map((version) => ({
+	// The response from the npm registry is not sorted, so we need to sort it by version
+	const sortedVersions = sort(versions);
+	return sortedVersions.map((version) => ({
 		version,
 		satisfied: semverRange ? satisfies(version, semverRange) : false,
 	}));
