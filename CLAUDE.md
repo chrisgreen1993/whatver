@@ -4,17 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**whatver** is a modern CLI tool and Node.js module built with TypeScript and Bun that checks npm package versions against semver ranges. It provides both a command-line interface and a programmatic API to determine which versions of an npm package satisfy a given semver constraint, with colored output to highlight valid versions.
+**whatver** is a modern CLI tool and Node.js module built with TypeScript and Bun that checks npm package versions against semver ranges. It provides both a command-line interface and a programmatic API to analyze npm package versions, determine semver satisfaction, and filter versions based on constraints, with colored output to highlight valid versions.
 
 ## Architecture
 
 The project follows a modern TypeScript architecture with source and build separation:
 
 ### Source Files (src/)
-- **src/lib.ts**: Core module that exports the main functionality
-  - Uses `npm view` command to fetch package versions from npm registry
-  - Leverages the `semver` library to validate versions against ranges
-  - Returns array of `{version, satisfied}` objects with proper TypeScript typing
+- **src/index.ts**: Core module that exports the main functionality
+  - Uses npm registry HTTP API to fetch package versions with optimized headers
+  - Leverages the `semver` library to validate ranges and check version satisfaction
+  - Exports `allVersions()` and `satisfiedVersions()` functions with proper TypeScript typing
+  - Includes semver range validation using `validRange()` for early error detection
   
 - **src/cli.ts**: Command-line interface wrapper
   - Handles argument parsing and validation with TypeScript types
@@ -22,8 +23,9 @@ The project follows a modern TypeScript architecture with source and build separ
   - Uses `cli-columns` for formatted multi-column display
   - Contains usage text and error handling
   
-- **src/shared-types.ts**: Shared TypeScript interfaces used across modules
-- **src/types.d.ts**: Local type definitions for packages without official types
+- **src/types.ts**: TypeScript interfaces for the library
+  - `PackageVersionInfo` interface for version data with satisfaction status
+- **src/delcarations.d.ts**: Local type definitions for packages without official types
 
 ### Build Output (dist/)
 - Compiled JavaScript files with declaration files (.d.ts)
@@ -54,27 +56,21 @@ bun install
 bun run build        # Build with Bun bundler + generate TypeScript declarations
 ```
 
-### Run Development Version
-```bash
-bun run dev <package-name> "<semver-range>"
-# Example: bun run dev lodash "^4.14"
-```
-
-### Run Compiled Version
-```bash
-bun run start <package-name> "<semver-range>"
-# Example: bun run start lodash "^4.14"
-```
-
 ### Type Checking
 ```bash
-bun run typecheck    # Check types without emitting files
+bun run type-check    # Check types without emitting files
 ```
 
 ### Testing
-Currently no test framework is configured. The package.json shows:
 ```bash
-bun test  # Will output "Error: no test specified" and exit 1
+bun test            # Run test suite with Bun's built-in test runner
+```
+
+### Linting & Formatting
+```bash
+bun run lint        # Run Biome linter
+bun run format      # Run Biome formatter
+bun run check       # Run both linter and formatter checks
 ```
 
 ## Dependencies
@@ -86,23 +82,30 @@ bun test  # Will output "Error: no test specified" and exit 1
 
 ### Development Dependencies  
 - **typescript**: TypeScript compiler - v5.9.2
+- **@biomejs/biome**: Fast linter and formatter for JavaScript/TypeScript - v2.2.4
 - **@types/bun**: Bun runtime type definitions (includes Node.js compatibility) - v1.2.21
 - **@types/semver**: Semver type definitions - v7.7.1
 - **@npm/types**: Official npm registry API type definitions - v2.1.0
 
 ### Type Definitions
-- **src/types.d.ts**: Local type definitions for cli-columns (no official types available)
+- **src/delcarations.d.ts**: Local type definitions for cli-columns (no official types available)
 
 ## Module Usage
 
 The library can be imported and used programmatically with full TypeScript support:
 
 ```typescript
-import checkVersions from "./lib.js";
+import { allVersions, satisfiedVersions } from "whatver";
 
-const versionInfo = await checkVersions("lodash", "^4.14");
-// Returns Promise<VersionInfo[]> where VersionInfo = { version: string, satisfied: boolean }
+// Get all versions with satisfaction status
+const versionInfo = await allVersions("lodash", "^4.14");
+// Returns Promise<PackageVersionInfo[]> where PackageVersionInfo = { version: string, satisfied: boolean }
 console.log(versionInfo);
+
+// Get only versions that satisfy the range
+const satisfied = await satisfiedVersions("lodash", "^4.14");
+// Returns Promise<string[]> - array of version strings
+console.log(satisfied);
 ```
 
 ## Key Implementation Details
@@ -114,4 +117,8 @@ console.log(versionInfo);
 - **Build Pipeline**: Bun bundler for fast compilation + TypeScript for declaration files and type checking
 - **npm Registry API**: Direct HTTP API calls to npm registry with optimized headers (72% smaller responses)
 - **Async/Await**: Modern async patterns with fetch API
-- **Error Handling**: CLI catches and displays error messages with proper TypeScript error typing
+- **Error Handling**: Comprehensive error handling with proper TypeScript error typing
+- **Semver Validation**: Early validation of semver ranges using `validRange()` for better error messages
+- **Version Sorting**: Automatic sorting of versions using `semver.sort()` for consistent output
+- **Test Coverage**: Comprehensive test suite using Bun's built-in test runner with mocked fetch
+- **Biome Integration**: Fast linting and formatting with Biome for consistent code quality
