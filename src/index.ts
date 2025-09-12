@@ -1,6 +1,6 @@
 import type { Manifest } from "@npm/types";
 import { satisfies, sort, validRange } from "semver";
-import type { VersionInfo } from "./types";
+import type { PackageVersionInfo } from "./types";
 
 // Not a comprehensive check, but good enough for our use case
 function isNpmManifest(data: unknown): data is Manifest {
@@ -48,10 +48,11 @@ async function fetchPackageVersions(pkgName: string): Promise<string[]> {
 	}
 }
 
-export default async function checkVersions(
+// list all versions and whether they satisfy the semver range
+export async function allVersions(
 	pkgName: string,
 	semverRange?: string,
-): Promise<VersionInfo[]> {
+): Promise<PackageVersionInfo[]> {
 	if (semverRange && !validRange(semverRange)) {
 		throw new Error(`Invalid semver range: ${semverRange}`);
 	}
@@ -63,4 +64,15 @@ export default async function checkVersions(
 		version,
 		satisfied: semverRange ? satisfies(version, semverRange) : false,
 	}));
+}
+
+// List only the versions that satisfy the semver range
+export async function satisfiedVersions(
+	pkgName: string,
+	semverRange: string,
+): Promise<string[]> {
+	const versions = await allVersions(pkgName, semverRange);
+	return versions
+		.filter((version) => version.satisfied)
+		.map((version) => version.version);
 }

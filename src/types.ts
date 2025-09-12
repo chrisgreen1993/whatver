@@ -1,4 +1,4 @@
-export interface VersionInfo {
+export interface PackageVersionInfo {
 	version: string;
 	satisfied: boolean;
 }

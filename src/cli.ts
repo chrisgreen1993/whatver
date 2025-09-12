@@ -2,8 +2,8 @@
 
 import chalk from "chalk";
 import columns from "cli-columns";
-import checkVersions from "./index";
-import type { VersionInfo } from "./types";
+import { allVersions } from "./index";
+import type { PackageVersionInfo } from "./types";
 
 const USAGE_TEXT = `
 Usage: whatver [package name] [semver range]
@@ -16,7 +16,7 @@ function parseArguments(args: string[]): string[] {
 	return programArgs;
 }
 
-function colourValidVersions(versions: VersionInfo[]): string[] {
+function colourValidVersions(versions: PackageVersionInfo[]): string[] {
 	return versions.map(({ version, satisfied }) =>
 		satisfied ? chalk.green(version) : version,
 	);
@@ -30,7 +30,7 @@ function colourValidVersions(versions: VersionInfo[]): string[] {
 			console.log(USAGE_TEXT);
 			return;
 		}
-		const versions = await checkVersions(pkgName, semverRange);
+		const versions = await allVersions(pkgName, semverRange);
 		const versionsWithColour = colourValidVersions(versions);
 		console.log(columns(versionsWithColour, { sort: false }));
 	} catch (error) {

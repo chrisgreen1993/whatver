@@ -7,11 +7,11 @@ import {
 	type Mock,
 	mock,
 } from "bun:test";
-import checkVersions from "./index";
+import { allVersions, satisfiedVersions } from "./index";
 
 let mockFetch: Mock<() => Promise<Response>>;
 
-describe("checkVersions", () => {
+describe("allVersions", () => {
 	beforeEach(() => {
 		// Very simple fetch mock
 		mockFetch = mock(() => Promise.resolve(new Response()));
@@ -40,7 +40,7 @@ describe("checkVersions", () => {
 			),
 		);
 
-		const result = await checkVersions("test-package", "^1.0.0");
+		const result = await allVersions("test-package", "^1.0.0");
 
 		expect(result).toEqual([
 			{ version: "1.0.0", satisfied: true },
@@ -59,7 +59,7 @@ describe("checkVersions", () => {
 			),
 		);
 
-		expect(checkVersions("nonexistent-package")).rejects.toThrow(
+		expect(allVersions("nonexistent-package")).rejects.toThrow(
 			"Failed to fetch package versions: Package 'nonexistent-package' not found in npm registry",
 		);
 	});
@@ -78,7 +78,7 @@ describe("checkVersions", () => {
 			),
 		);
 
-		const result = await checkVersions("empty-package", "^1.0.0");
+		const result = await allVersions("empty-package", "^1.0.0");
 
 		expect(result).toEqual([]);
 	});
@@ -98,7 +98,7 @@ describe("checkVersions", () => {
 			),
 		);
 
-		await expect(checkVersions("invalid-package")).rejects.toThrow(
+		await expect(allVersions("invalid-package")).rejects.toThrow(
 			"Failed to fetch package versions: Invalid npm registry response format",
 		);
 	});
@@ -108,7 +108,7 @@ describe("checkVersions", () => {
 			Promise.reject(new Error("Network error")),
 		);
 
-		await expect(checkVersions("test-package")).rejects.toThrow(
+		await expect(allVersions("test-package")).rejects.toThrow(
 			"Failed to fetch package versions: Network error",
 		);
 	});
@@ -123,7 +123,7 @@ describe("checkVersions", () => {
 			),
 		);
 
-		expect(checkVersions("test-package")).rejects.toThrow(
+		expect(allVersions("test-package")).rejects.toThrow(
 			"Failed to fetch package versions: Failed to fetch package info: 500 Internal Server Error",
 		);
 	});
@@ -147,7 +147,7 @@ describe("checkVersions", () => {
 			),
 		);
 
-		const result = await checkVersions("test-package", "~1.0.0");
+		const result = await allVersions("test-package", "~1.0.0");
 
 		expect(result).toEqual([
 			{ version: "1.0.0", satisfied: true },
@@ -174,7 +174,7 @@ describe("checkVersions", () => {
 			),
 		);
 
-		const result = await checkVersions("test-package");
+		const result = await allVersions("test-package");
 
 		expect(result).toEqual([
 			{ version: "1.0.0", satisfied: false },
@@ -183,15 +183,15 @@ describe("checkVersions", () => {
 	});
 
 	it("should throw error for invalid semver range", () => {
-		expect(checkVersions("test-package", "not-a-semver")).rejects.toThrow(
+		expect(allVersions("test-package", "not-a-semver")).rejects.toThrow(
 			"Invalid semver range: not-a-semver",
 		);
 
-		expect(checkVersions("test-package", ">=1.0.0 <=")).rejects.toThrow(
+		expect(allVersions("test-package", ">=1.0.0 <=")).rejects.toThrow(
 			"Invalid semver range: >=1.0.0 <=",
 		);
 
-		expect(checkVersions("test-package", "^abc")).rejects.toThrow(
+		expect(allVersions("test-package", "^abc")).rejects.toThrow(
 			"Invalid semver range: ^abc",
 		);
 	});
@@ -213,11 +213,70 @@ describe("checkVersions", () => {
 			),
 		);
 
-		const result = await checkVersions("test-package");
+		const result = await allVersions("test-package");
 
 		expect(result).toEqual([
 			{ version: "1.0.0", satisfied: false },
 			{ version: "2.0.0", satisfied: false },
 		]);
+	});
+});
+
+describe("satisfiedVersions", () => {
+	beforeEach(() => {
+		mockFetch = mock(() => Promise.resolve(new Response()));
+		global.fetch = mockFetch as unknown as typeof fetch;
+	});
+
+	afterEach(() => {
+		mockFetch.mockClear();
+	});
+
+	it("should return only satisfied versions", async () => {
+		const mockResponse = {
+			versions: {
+				"1.0.0": {},
+				"1.1.0": {},
+				"1.2.0": {},
+				"2.0.0": {},
+				"2.1.0": {},
+			},
+		};
+
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify(mockResponse), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			),
+		);
+
+		const result = await satisfiedVersions("test-package", "^1.0.0");
+
+		expect(result).toEqual(["1.0.0", "1.1.0", "1.2.0"]);
+	});
+
+	it("should return empty array when no versions satisfy", async () => {
+		const mockResponse = {
+			versions: {
+				"1.0.0": {},
+				"1.1.0": {},
+				"1.2.0": {},
+			},
+		};
+
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify(mockResponse), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			),
+		);
+
+		const result = await satisfiedVersions("test-package", "^2.0.0");
+
+		expect(result).toEqual([]);
 	});
 });
