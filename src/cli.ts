@@ -54,9 +54,10 @@ yargs(hideBin(process.argv))
 		"List all versions of lodash with the ^1.1 range highlighted",
 	)
 	.help()
-	.alias("help", "h")
 	.version()
+	.alias("help", "h")
 	.alias("version", "v")
+	.alias("all", "a")
 	.showHelpOnFail(false)
 	.fail((msg, _err, yargs) => {
 		// We show the help on fail manually so its coloured correctly
