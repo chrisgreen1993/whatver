@@ -4,19 +4,12 @@ import chalk from "chalk";
 import columns from "cli-columns";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { allVersions } from "./index";
-import type { PackageVersionInfo } from "./types";
-
-function colourValidVersions(versions: PackageVersionInfo[]): string[] {
-	return versions.map(({ version, satisfied }) =>
-		satisfied ? chalk.green.bold(version) : version,
-	);
-}
+import { allVersions, satisfiedVersions } from "./index";
 
 yargs(hideBin(process.argv))
 	.command(
 		"$0 <package> [range]",
-		"Check npm package versions against semver ranges",
+		"Check npm package versions against semver ranges (shows only matching versions by default)",
 		(yargs) => {
 			return yargs
 				.positional("package", {
@@ -27,20 +20,39 @@ yargs(hideBin(process.argv))
 				.positional("range", {
 					describe: "The semver range to check against (optional)",
 					type: "string",
+				})
+				.option("all", {
+					describe: "Show all versions (including non-matching ones)",
+					type: "boolean",
+					default: false,
 				});
 		},
-		async (argv) => {
+		async ({ package: pkg, range, all }) => {
 			try {
-				const versions = await allVersions(argv.package, argv.range);
-				const versionsWithColour = colourValidVersions(versions);
-				console.log(columns(versionsWithColour, { sort: false }));
+				if (!range || all) {
+					const versions = await allVersions(pkg, range);
+					const versionsWithColour = versions.map(({ version, satisfied }) =>
+						satisfied ? chalk.green.bold(version) : version,
+					);
+					console.log(columns(versionsWithColour, { sort: false }));
+				} else {
+					const versions = await satisfiedVersions(pkg, range);
+					const versionsWithColour = versions.map((version) =>
+						chalk.green.bold(version),
+					);
+					console.log(columns(versionsWithColour, { sort: false }));
+				}
 			} catch (error) {
 				console.error(error instanceof Error ? error.message : error);
 			}
 		},
 	)
 	.example("whatver lodash", "List all versions of lodash")
-	.example('whatver lodash "^1.1"', "List versions of lodash matching ^1.1")
+	.example('whatver lodash "^1.1"', "List versions of lodash satisfying ^1.1")
+	.example(
+		'whatver lodash "^1.1" --all',
+		"List all versions of lodash with the ^1.1 range highlighted",
+	)
 	.help()
 	.alias("help", "h")
 	.version()
