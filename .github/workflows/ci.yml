@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup devbox
+        uses: jetify-com/devbox-install-action@v0.12.0
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: devbox run -- bun install
+
+      - name: Run type checking
+        run: devbox run -- bun run type-check
+
+      - name: Run linting and formatting checks
+        run: devbox run -- bun run check
+
+      - name: Run tests
+        run: devbox run -- bun test

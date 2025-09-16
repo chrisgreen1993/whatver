@@ -157,3 +157,20 @@ When implementing new functionality or making changes, follow this checklist:
 - [ ] **Update CLAUDE.md** - Update implementation details, dependencies, and architectural changes
 - [ ] **Update CLI help text and examples** - Ensure yargs examples and descriptions reflect new functionality
 - [ ] **Run linting and type checking** - Execute `bun run check` and `bun run type-check` to ensure code quality
+
+## Continuous Integration
+
+The project uses GitHub Actions for CI/CD:
+
+### **CI Workflow** (`.github/workflows/ci.yml`)
+- **Triggers**: Runs on pushes to `main` and all pull requests to `main`
+- **Environment**: Ubuntu latest with devbox-managed dependencies (ensures exact parity with local development)
+- **Steps**:
+  1. **Checkout code** - Uses `actions/checkout@v4`
+  2. **Setup devbox** - Uses `jetify-com/devbox-action@v0.13.0` with caching enabled
+  3. **Install dependencies** - Runs `devbox run -- bun install`
+  4. **Type checking** - Runs `devbox run -- bun run type-check` (TypeScript compilation check)
+  5. **Linting/Formatting** - Runs `devbox run -- bun run check` (Biome linter and formatter)
+  6. **Testing** - Runs `devbox run -- bun test` (full test suite with Bun's test runner)
+
+All checks must pass for pull requests to be merged.
