@@ -144,3 +144,16 @@ const installedVersion = localPackageInstalledVersion("lodash"); // Returns vers
 - **Options-Based API**: Flexible function signatures with options objects for controlling prerelease inclusion
 - **Comprehensive Testing**: Test suite using Bun's built-in test runner with mock.module for proper mocking of filesystem access
 - **Biome Integration**: Fast linting and formatting with Biome for consistent code quality
+
+## Change Checklist
+
+When implementing new functionality or making changes, follow this checklist:
+
+- [ ] **Write failing tests first** - Add tests that describe the desired behavior before implementing (unless otherwise specified for hotfixes or refactoring)
+- [ ] **Implement functionality** - Write the minimum code needed to make tests pass
+- [ ] **Update function signatures and behavior** - Ensure all changes are properly typed and documented
+- [ ] **Verify all tests pass** - Run full test suite to ensure no regressions
+- [ ] **Update README.md** - Add new examples, CLI usage patterns, and feature documentation
+- [ ] **Update CLAUDE.md** - Update implementation details, dependencies, and architectural changes
+- [ ] **Update CLI help text and examples** - Ensure yargs examples and descriptions reflect new functionality
+- [ ] **Run linting and type checking** - Execute `bun run check` and `bun run type-check` to ensure code quality
