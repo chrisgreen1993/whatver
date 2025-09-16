@@ -1,6 +1,6 @@
 import type { Manifest, PackageJSON } from "@npm/types";
-import { satisfies, sort, validRange } from "semver";
-import type { PackageVersionInfo } from "./types";
+import { prerelease, satisfies, sort, validRange } from "semver";
+import type { PackageVersionInfo, PackageVersionOptions } from "./types";
 
 // Not a comprehensive check, but good enough for our use case
 function isNpmManifest(data: unknown): data is Manifest {
@@ -62,7 +62,10 @@ async function fetchPackageVersions(pkgName: string): Promise<string[]> {
 export async function allPackageVersions(
 	pkgName: string,
 	semverRange?: string,
+	options: PackageVersionOptions = {},
 ): Promise<PackageVersionInfo[]> {
+	const { showPrerelease = false } = options;
+
 	if (semverRange && !validRange(semverRange)) {
 		throw new Error(`Invalid semver range: ${semverRange}`);
 	}
@@ -70,9 +73,17 @@ export async function allPackageVersions(
 	const versions = await fetchPackageVersions(pkgName);
 	// The response from the npm registry is not sorted, so we need to sort it by version
 	const sortedVersions = sort(versions);
-	return sortedVersions.map((version) => ({
+
+	// Filter out prerelease versions by default
+	const filteredVersions = showPrerelease
+		? sortedVersions
+		: sortedVersions.filter((version) => !prerelease(version));
+
+	return filteredVersions.map((version) => ({
 		version,
-		satisfied: semverRange ? satisfies(version, semverRange) : false,
+		satisfied: semverRange
+			? satisfies(version, semverRange, { includePrerelease: showPrerelease })
+			: false,
 	}));
 }
 
@@ -80,8 +91,9 @@ export async function allPackageVersions(
 export async function satisfiedPackageVersions(
 	pkgName: string,
 	semverRange: string,
+	options: PackageVersionOptions = {},
 ): Promise<string[]> {
-	const versions = await allPackageVersions(pkgName, semverRange);
+	const versions = await allPackageVersions(pkgName, semverRange, options);
 	return versions
 		.filter((version) => version.satisfied)
 		.map((version) => version.version);

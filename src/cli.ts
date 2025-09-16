@@ -32,9 +32,14 @@ yargs(hideBin(process.argv))
 					describe: "Show all versions (including non-matching ones)",
 					type: "boolean",
 					default: false,
+				})
+				.option("show-prerelease", {
+					describe: "Include prerelease versions (e.g., 1.0.0-alpha.1)",
+					type: "boolean",
+					default: false,
 				});
 		},
-		async ({ package: pkg, range, all }) => {
+		async ({ package: pkg, range, all, "show-prerelease": showPrerelease }) => {
 			try {
 				// Always check for local package information
 				const localRange = ignoreErrors(() => localPackageSemverRange(pkg));
@@ -53,9 +58,15 @@ yargs(hideBin(process.argv))
 				const effectiveRange = range || localRange;
 				const showAllVersions = all || !effectiveRange;
 
+				const options = { showPrerelease };
+
 				if (showAllVersions) {
 					// Show all versions (with highlighting if there's a range)
-					const versions = await allPackageVersions(pkg, effectiveRange);
+					const versions = await allPackageVersions(
+						pkg,
+						effectiveRange,
+						options,
+					);
 					const versionsWithColour = versions.map(({ version, satisfied }) => {
 						return formatVersionString(
 							version,
@@ -67,7 +78,11 @@ yargs(hideBin(process.argv))
 					console.log(columns(versionsWithColour, { sort: false }));
 				} else {
 					// Show only satisfied versions
-					const versions = await satisfiedPackageVersions(pkg, effectiveRange);
+					const versions = await satisfiedPackageVersions(
+						pkg,
+						effectiveRange,
+						options,
+					);
 					const versionsWithColour = versions.map((version) => {
 						return formatVersionString(
 							version,
@@ -89,11 +104,16 @@ yargs(hideBin(process.argv))
 		'whatver lodash "^1.1" --all',
 		"List all versions of lodash with the ^1.1 range highlighted",
 	)
+	.example(
+		"whatver react --show-prerelease",
+		"List all versions of react including prerelease versions",
+	)
 	.help()
 	.version()
 	.alias("help", "h")
 	.alias("version", "v")
 	.alias("all", "a")
+	.alias("show-prerelease", "p")
 	.showHelpOnFail(false)
 	.fail((msg, _err, yargs) => {
 		// We show the help on fail manually so its coloured correctly

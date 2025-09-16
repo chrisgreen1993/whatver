@@ -133,7 +133,7 @@ describe("allVersions", () => {
 		);
 	});
 
-	it("should handle semver range correctly", async () => {
+	it("should handle semver range correctly and exclude prerelease by default", async () => {
 		const mockResponse = {
 			versions: {
 				"1.0.0": {},
@@ -158,15 +158,77 @@ describe("allVersions", () => {
 			{ version: "1.0.0", satisfied: true },
 			{ version: "1.1.0", satisfied: false },
 			{ version: "2.0.0", satisfied: false },
+		]);
+	});
+
+	it("should exclude prerelease versions by default", async () => {
+		const mockResponse = {
+			versions: {
+				"1.0.0": {},
+				"1.1.0": {},
+				"2.0.0": {},
+				"2.1.0-beta.1": {},
+				"2.2.0-alpha.1": {},
+				"3.0.0": {},
+			},
+		};
+
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify(mockResponse), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			),
+		);
+
+		const result = await allPackageVersions("test-package", ">=1.0.0");
+
+		expect(result).toEqual([
+			{ version: "1.0.0", satisfied: true },
+			{ version: "1.1.0", satisfied: true },
+			{ version: "2.0.0", satisfied: true },
+			{ version: "3.0.0", satisfied: true },
+		]);
+	});
+
+	it("should include prerelease versions when showPrerelease is true", async () => {
+		const mockResponse = {
+			versions: {
+				"1.0.0": {},
+				"1.1.0": {},
+				"2.0.0": {},
+				"2.1.0-beta.1": {},
+			},
+		};
+
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify(mockResponse), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			),
+		);
+
+		const result = await allPackageVersions("test-package", undefined, {
+			showPrerelease: true,
+		});
+
+		expect(result).toEqual([
+			{ version: "1.0.0", satisfied: false },
+			{ version: "1.1.0", satisfied: false },
+			{ version: "2.0.0", satisfied: false },
 			{ version: "2.1.0-beta.1", satisfied: false },
 		]);
 	});
 
-	it("should handle no semver range provided", async () => {
+	it("should handle no semver range provided and exclude prerelease by default", async () => {
 		const mockResponse = {
 			versions: {
 				"1.0.0": {},
 				"2.0.0": {},
+				"2.1.0-beta.1": {},
 			},
 		};
 
@@ -283,6 +345,57 @@ describe("satisfiedPackageVersions", () => {
 		const result = await satisfiedPackageVersions("test-package", "^2.0.0");
 
 		expect(result).toEqual([]);
+	});
+
+	it("should exclude prerelease versions from satisfied versions by default", async () => {
+		const mockResponse = {
+			versions: {
+				"1.0.0": {},
+				"1.1.0": {},
+				"1.2.0": {},
+				"1.3.0-beta.1": {},
+				"1.4.0-alpha.2": {},
+			},
+		};
+
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify(mockResponse), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			),
+		);
+
+		const result = await satisfiedPackageVersions("test-package", "^1.0.0");
+
+		expect(result).toEqual(["1.0.0", "1.1.0", "1.2.0"]);
+	});
+
+	it("should include prerelease versions in satisfied versions when showPrerelease is true", async () => {
+		const mockResponse = {
+			versions: {
+				"1.0.0": {},
+				"1.1.0": {},
+				"1.2.0": {},
+				"1.3.0-beta.1": {},
+			},
+		};
+
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify(mockResponse), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			),
+		);
+
+		const result = await satisfiedPackageVersions("test-package", "^1.0.0", {
+			showPrerelease: true,
+		});
+
+		expect(result).toEqual(["1.0.0", "1.1.0", "1.2.0", "1.3.0-beta.1"]);
 	});
 });
 
