@@ -25,10 +25,12 @@ The project follows a modern TypeScript architecture with source and build separ
   - Uses `chalk` for colored terminal output with compound styling (green/yellow for ranges, magenta for installed)
   - Uses `cli-columns` for horizontal multi-column display optimized for terminals
   - Includes visual indicators (✔ checkmark) for installed versions with proper alignment
+  - Includes `--show-prerelease` option to control prerelease version visibility (hidden by default)
   - Contains comprehensive error handling and help text
   
 - **src/types.ts**: TypeScript interfaces for the library
   - `PackageVersionInfo` interface for version data with satisfaction status
+  - `PackageVersionOptions` interface for function options including prerelease control
 - **src/delcarations.d.ts**: Local type definitions for packages without official types
 
 ### Build Output (dist/)
@@ -82,7 +84,7 @@ bun run check       # Run both linter and formatter checks
 ### Runtime Dependencies
 - **chalk**: Terminal string styling (colors) - v5.6.2
 - **cli-columns**: Multi-column terminal output formatting - v4.0.0
-- **semver**: Semantic versioning utilities for validation - v7.7.2
+- **semver**: Semantic versioning utilities for validation and prerelease detection - v7.7.2
 - **yargs**: Modern command-line argument parsing - latest
 
 ### Development Dependencies  
@@ -102,15 +104,21 @@ The library can be imported and used programmatically with full TypeScript suppo
 ```typescript
 import { allPackageVersions, satisfiedPackageVersions, localPackageSemverRange, localPackageInstalledVersion } from "whatver";
 
-// Get all versions with satisfaction status
+// Get all stable versions with satisfaction status (prerelease excluded by default)
 const versionInfo = await allPackageVersions("lodash", "^4.14");
 // Returns Promise<PackageVersionInfo[]> where PackageVersionInfo = { version: string, satisfied: boolean }
 console.log(versionInfo);
 
-// Get only versions that satisfy the range
+// Include prerelease versions
+const withPrerelease = await allPackageVersions("lodash", "^4.14", { showPrerelease: true });
+
+// Get only stable versions that satisfy the range
 const satisfied = await satisfiedPackageVersions("lodash", "^4.14");
-// Returns Promise<string[]> - array of version strings
+// Returns Promise<string[]> - array of version strings (stable versions only)
 console.log(satisfied);
+
+// Include prerelease versions that satisfy the range
+const satisfiedWithPrerelease = await satisfiedPackageVersions("lodash", "^4.14", { showPrerelease: true });
 
 // Local package detection
 const localRange = localPackageSemverRange("lodash"); // Returns semver range from package.json
@@ -130,7 +138,9 @@ const installedVersion = localPackageInstalledVersion("lodash"); // Returns vers
 - **Semver Validation**: Early validation of semver ranges using `validRange()` for better error messages
 - **Version Sorting**: Automatic sorting of versions using `semver.sort()` for consistent output
 - **Local Package Detection**: Automatic detection of packages in package.json and node_modules using Node.js require()
+- **Prerelease Filtering**: Uses semver's `prerelease()` function to identify and filter prerelease versions by default
 - **Smart CLI Logic**: Intelligent behavior that shows satisfied versions by default when local range exists, all versions otherwise
 - **Visual Terminal Output**: Horizontal column display with color-coded versions and alignment for visual indicators
+- **Options-Based API**: Flexible function signatures with options objects for controlling prerelease inclusion
 - **Comprehensive Testing**: Test suite using Bun's built-in test runner with mock.module for proper mocking of filesystem access
 - **Biome Integration**: Fast linting and formatting with Biome for consistent code quality

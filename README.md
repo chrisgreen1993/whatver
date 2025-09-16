@@ -18,11 +18,14 @@ A modern CLI tool and Node.js library for checking npm package versions against 
 
 ### Basic Usage
 ```bash
-# Show all versions of a package
+# Show all stable versions of a package (excludes prerelease by default)
 npx whatver lodash
 
 # Show versions matching a specific range
 npx whatver lodash "^4.14"
+
+# Include prerelease versions (alpha, beta, rc, etc.)
+npx whatver lodash --show-prerelease
 ```
 
 ### Smart Local Package Detection
@@ -39,6 +42,9 @@ npx whatver lodash "^4.0.0"
 
 # Show all versions with local range highlighted
 npx whatver lodash --all
+
+# Include prerelease versions in local package analysis
+npx whatver lodash --show-prerelease
 ```
 
 ### Visual Indicators
@@ -46,6 +52,9 @@ npx whatver lodash --all
 - **Green**: Versions satisfying provided semver range
 - **Yellow**: Versions satisfying local package.json range
 - **Gray**: Versions not satisfying any range
+
+### Version Filtering
+By default, whatver excludes prerelease versions (alpha, beta, rc, etc.) to show only stable releases. Use `--show-prerelease` to include prerelease versions when needed.
 
 ![screenshot](screenshot.png)
 
@@ -56,6 +65,7 @@ npx whatver lodash --all
 ```typescript
 import { allPackageVersions } from "whatver";
 
+// Get stable versions only (default behavior)
 const versionInfo = await allPackageVersions("lodash", "^4.14");
 // Returns: [
 //   { version: "4.14.0", satisfied: true },
@@ -64,6 +74,12 @@ const versionInfo = await allPackageVersions("lodash", "^4.14");
 //   ...
 // ]
 console.log(versionInfo);
+
+// Include prerelease versions
+const allVersions = await allPackageVersions("lodash", "^4.14", {
+  showPrerelease: true
+});
+// Also includes versions like "4.15.0-beta.1", "4.16.0-alpha.1", etc.
 ```
 
 ### Get only versions that satisfy the range
@@ -71,9 +87,16 @@ console.log(versionInfo);
 ```typescript
 import { satisfiedPackageVersions } from "whatver";
 
+// Get satisfied stable versions only (default)
 const satisfied = await satisfiedPackageVersions("lodash", "^4.14");
 // Returns: ["4.14.0", "4.14.1", "4.15.0", "4.16.0", ...]
 console.log(satisfied);
+
+// Include prerelease versions that satisfy the range
+const withPrerelease = await satisfiedPackageVersions("lodash", "^4.14", {
+  showPrerelease: true
+});
+// Also includes "4.15.0-beta.1", "4.16.0-alpha.1", etc. if they satisfy ^4.14
 ```
 
 ### Local Package Detection
