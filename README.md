@@ -5,18 +5,48 @@ A modern CLI tool and Node.js library for checking npm package versions against 
 ## Features
 
 - 🚀 **Fast**: Uses npm registry HTTP API with optimized headers for 72% smaller responses
+- 🧠 **Smart CLI**: Automatically detects local packages and their semver ranges
 - 📦 **Two APIs**: Get all versions with satisfaction status, or only satisfied versions
 - 🔍 **Smart Validation**: Early semver range validation with helpful error messages
 - 📊 **Sorted Output**: Automatic version sorting for consistent results
-- 🎨 **CLI Colors**: Highlighted output showing which versions satisfy your range
+- 🎨 **Visual Indicators**: Color-coded output with icons for installed versions
+- 🖥️ **Column Display**: Horizontal column output optimized for terminal viewing
 - ✅ **Well Tested**: Comprehensive test suite covering all edge cases
 - 📘 **TypeScript**: Full type safety and IntelliSense support
 
 ## CLI Usage
 
+### Basic Usage
 ```bash
+# Show all versions of a package
+npx whatver lodash
+
+# Show versions matching a specific range
 npx whatver lodash "^4.14"
 ```
+
+### Smart Local Package Detection
+When run in a project directory, whatver automatically detects local packages:
+
+```bash
+# In a project with lodash in package.json
+npx whatver lodash
+# Automatically uses the semver range from your package.json
+# Shows installed version with visual indicators
+
+# Override with specific range
+npx whatver lodash "^4.0.0"
+
+# Show all versions with local range highlighted
+npx whatver lodash --all
+```
+
+### Visual Indicators
+- **✔** (magenta): Installed version from node_modules
+- **Green**: Versions satisfying provided semver range
+- **Yellow**: Versions satisfying local package.json range
+- **Gray**: Versions not satisfying any range
+
 ![screenshot](screenshot.png)
 
 ## Library Usage
@@ -24,9 +54,9 @@ npx whatver lodash "^4.14"
 ### Get all versions with satisfaction status
 
 ```typescript
-import { allVersions } from "whatver";
+import { allPackageVersions } from "whatver";
 
-const versionInfo = await allVersions("lodash", "^4.14");
+const versionInfo = await allPackageVersions("lodash", "^4.14");
 // Returns: [
 //   { version: "4.14.0", satisfied: true },
 //   { version: "4.15.0", satisfied: true },
@@ -39,27 +69,49 @@ console.log(versionInfo);
 ### Get only versions that satisfy the range
 
 ```typescript
-import { satisfiedVersions } from "whatver";
+import { satisfiedPackageVersions } from "whatver";
 
-const satisfied = await satisfiedVersions("lodash", "^4.14");
+const satisfied = await satisfiedPackageVersions("lodash", "^4.14");
 // Returns: ["4.14.0", "4.14.1", "4.15.0", "4.16.0", ...]
 console.log(satisfied);
+```
+
+### Local Package Detection
+
+```typescript
+import { localPackageSemverRange, localPackageInstalledVersion } from "whatver";
+
+// Get semver range from local package.json
+try {
+  const range = localPackageSemverRange("lodash");
+  console.log(range); // "^4.17.21"
+} catch (error) {
+  console.log("Package not found in package.json");
+}
+
+// Get installed version from node_modules
+try {
+  const version = localPackageInstalledVersion("lodash");
+  console.log(version); // "4.17.21"
+} catch (error) {
+  console.log("Package not installed");
+}
 ```
 
 ### Error Handling
 
 ```typescript
-import { allVersions } from "whatver";
+import { allPackageVersions } from "whatver";
 
 try {
-  const versions = await allVersions("nonexistent-package", "^1.0.0");
+  const versions = await allPackageVersions("nonexistent-package", "^1.0.0");
 } catch (error) {
   console.error(error.message);
   // "Failed to fetch package versions: Package 'nonexistent-package' not found in npm registry"
 }
 
 try {
-  const versions = await allVersions("lodash", "invalid-semver");
+  const versions = await allPackageVersions("lodash", "invalid-semver");
 } catch (error) {
   console.error(error.message);
   // "Invalid semver range: invalid-semver"

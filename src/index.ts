@@ -1,4 +1,4 @@
-import type { Manifest } from "@npm/types";
+import type { Manifest, PackageJSON } from "@npm/types";
 import { satisfies, sort, validRange } from "semver";
 import type { PackageVersionInfo } from "./types";
 
@@ -9,6 +9,16 @@ function isNpmManifest(data: unknown): data is Manifest {
 		data !== null &&
 		"versions" in data &&
 		typeof data.versions === "object"
+	);
+}
+
+// Not a comprehensive check, but good enough for our use case
+function isPackageJSON(data: unknown): data is PackageJSON {
+	return (
+		typeof data === "object" &&
+		data !== null &&
+		"version" in data &&
+		typeof data.version === "string"
 	);
 }
 
@@ -49,7 +59,7 @@ async function fetchPackageVersions(pkgName: string): Promise<string[]> {
 }
 
 // list all versions and whether they satisfy the semver range
-export async function allVersions(
+export async function allPackageVersions(
 	pkgName: string,
 	semverRange?: string,
 ): Promise<PackageVersionInfo[]> {
@@ -67,12 +77,50 @@ export async function allVersions(
 }
 
 // List only the versions that satisfy the semver range
-export async function satisfiedVersions(
+export async function satisfiedPackageVersions(
 	pkgName: string,
 	semverRange: string,
 ): Promise<string[]> {
-	const versions = await allVersions(pkgName, semverRange);
+	const versions = await allPackageVersions(pkgName, semverRange);
 	return versions
 		.filter((version) => version.satisfied)
 		.map((version) => version.version);
+}
+
+// Find semver range for a package in local package.json
+export function localPackageSemverRange(pkgName: string): string {
+	// Try to import package.json from current working directory
+	const packageJson = require(`${process.cwd()}/package.json`);
+
+	if (!isPackageJSON(packageJson)) {
+		throw new Error("Invalid package.json");
+	}
+
+	// Check dependencies, devDependencies, peerDependencies, and optionalDependencies
+	const depTypes = [
+		"dependencies",
+		"devDependencies",
+		"peerDependencies",
+		"optionalDependencies",
+	] as const;
+
+	for (const depType of depTypes) {
+		if (packageJson[depType]?.[pkgName]) {
+			return packageJson[depType][pkgName];
+		}
+	}
+
+	throw new Error(`Package '${pkgName}' not found in package.json`);
+}
+
+export function localPackageInstalledVersion(pkgName: string): string {
+	const nodeModulesPackageJson = require(
+		`${process.cwd()}/node_modules/${pkgName}/package.json`,
+	);
+
+	if (!isPackageJSON(nodeModulesPackageJson)) {
+		throw new Error("Invalid package.json");
+	}
+
+	return nodeModulesPackageJson.version;
 }

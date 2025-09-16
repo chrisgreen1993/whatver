@@ -7,7 +7,12 @@ import {
 	type Mock,
 	mock,
 } from "bun:test";
-import { allVersions, satisfiedVersions } from "./index";
+import {
+	allPackageVersions,
+	localPackageInstalledVersion,
+	localPackageSemverRange,
+	satisfiedPackageVersions,
+} from "./index";
 
 let mockFetch: Mock<() => Promise<Response>>;
 
@@ -40,7 +45,7 @@ describe("allVersions", () => {
 			),
 		);
 
-		const result = await allVersions("test-package", "^1.0.0");
+		const result = await allPackageVersions("test-package", "^1.0.0");
 
 		expect(result).toEqual([
 			{ version: "1.0.0", satisfied: true },
@@ -59,7 +64,7 @@ describe("allVersions", () => {
 			),
 		);
 
-		expect(allVersions("nonexistent-package")).rejects.toThrow(
+		expect(allPackageVersions("nonexistent-package")).rejects.toThrow(
 			"Failed to fetch package versions: Package 'nonexistent-package' not found in npm registry",
 		);
 	});
@@ -78,7 +83,7 @@ describe("allVersions", () => {
 			),
 		);
 
-		const result = await allVersions("empty-package", "^1.0.0");
+		const result = await allPackageVersions("empty-package", "^1.0.0");
 
 		expect(result).toEqual([]);
 	});
@@ -98,7 +103,7 @@ describe("allVersions", () => {
 			),
 		);
 
-		await expect(allVersions("invalid-package")).rejects.toThrow(
+		await expect(allPackageVersions("invalid-package")).rejects.toThrow(
 			"Failed to fetch package versions: Invalid npm registry response format",
 		);
 	});
@@ -108,7 +113,7 @@ describe("allVersions", () => {
 			Promise.reject(new Error("Network error")),
 		);
 
-		await expect(allVersions("test-package")).rejects.toThrow(
+		await expect(allPackageVersions("test-package")).rejects.toThrow(
 			"Failed to fetch package versions: Network error",
 		);
 	});
@@ -123,7 +128,7 @@ describe("allVersions", () => {
 			),
 		);
 
-		expect(allVersions("test-package")).rejects.toThrow(
+		expect(allPackageVersions("test-package")).rejects.toThrow(
 			"Failed to fetch package versions: Failed to fetch package info: 500 Internal Server Error",
 		);
 	});
@@ -147,7 +152,7 @@ describe("allVersions", () => {
 			),
 		);
 
-		const result = await allVersions("test-package", "~1.0.0");
+		const result = await allPackageVersions("test-package", "~1.0.0");
 
 		expect(result).toEqual([
 			{ version: "1.0.0", satisfied: true },
@@ -174,7 +179,7 @@ describe("allVersions", () => {
 			),
 		);
 
-		const result = await allVersions("test-package");
+		const result = await allPackageVersions("test-package");
 
 		expect(result).toEqual([
 			{ version: "1.0.0", satisfied: false },
@@ -183,15 +188,15 @@ describe("allVersions", () => {
 	});
 
 	it("should throw error for invalid semver range", () => {
-		expect(allVersions("test-package", "not-a-semver")).rejects.toThrow(
+		expect(allPackageVersions("test-package", "not-a-semver")).rejects.toThrow(
 			"Invalid semver range: not-a-semver",
 		);
 
-		expect(allVersions("test-package", ">=1.0.0 <=")).rejects.toThrow(
+		expect(allPackageVersions("test-package", ">=1.0.0 <=")).rejects.toThrow(
 			"Invalid semver range: >=1.0.0 <=",
 		);
 
-		expect(allVersions("test-package", "^abc")).rejects.toThrow(
+		expect(allPackageVersions("test-package", "^abc")).rejects.toThrow(
 			"Invalid semver range: ^abc",
 		);
 	});
@@ -213,7 +218,7 @@ describe("allVersions", () => {
 			),
 		);
 
-		const result = await allVersions("test-package");
+		const result = await allPackageVersions("test-package");
 
 		expect(result).toEqual([
 			{ version: "1.0.0", satisfied: false },
@@ -222,7 +227,7 @@ describe("allVersions", () => {
 	});
 });
 
-describe("satisfiedVersions", () => {
+describe("satisfiedPackageVersions", () => {
 	beforeEach(() => {
 		mockFetch = mock(() => Promise.resolve(new Response()));
 		global.fetch = mockFetch as unknown as typeof fetch;
@@ -252,7 +257,7 @@ describe("satisfiedVersions", () => {
 			),
 		);
 
-		const result = await satisfiedVersions("test-package", "^1.0.0");
+		const result = await satisfiedPackageVersions("test-package", "^1.0.0");
 
 		expect(result).toEqual(["1.0.0", "1.1.0", "1.2.0"]);
 	});
@@ -275,8 +280,137 @@ describe("satisfiedVersions", () => {
 			),
 		);
 
-		const result = await satisfiedVersions("test-package", "^2.0.0");
+		const result = await satisfiedPackageVersions("test-package", "^2.0.0");
 
 		expect(result).toEqual([]);
+	});
+});
+
+describe("localPackageSemverRange", () => {
+	const originalCwd = process.cwd;
+	const mockPackageJson = {
+		version: "1.0.0",
+		dependencies: {
+			"deps-package": "^1.0.0",
+		},
+		devDependencies: {
+			"dev-package": "^1.5.0",
+		},
+		peerDependencies: {
+			"peer-package": ">=1.0.0",
+		},
+		optionalDependencies: {
+			"optional-package": "^2.0.0",
+		},
+	};
+
+	beforeEach(() => {
+		// Mock process.cwd
+		process.cwd = mock(() => "/test/dir");
+
+		// Mock the package.json file
+		mock.module("/test/dir/package.json", () => mockPackageJson);
+	});
+
+	afterEach(() => {
+		mock.restore();
+		process.cwd = originalCwd;
+	});
+
+	it("should return semver range from dependencies", () => {
+		const result = localPackageSemverRange("deps-package");
+		expect(result).toBe("^1.0.0");
+	});
+
+	it("should return semver range from devDependencies", () => {
+		const result = localPackageSemverRange("dev-package");
+		expect(result).toBe("^1.5.0");
+	});
+
+	it("should return semver range from peerDependencies", () => {
+		const result = localPackageSemverRange("peer-package");
+		expect(result).toBe(">=1.0.0");
+	});
+
+	it("should return semver range from optionalDependencies", () => {
+		const result = localPackageSemverRange("optional-package");
+		expect(result).toBe("^2.0.0");
+	});
+
+	it("should throw error when package not found", () => {
+		expect(() => localPackageSemverRange("nonexistent-package")).toThrow(
+			"Package 'nonexistent-package' not found in package.json",
+		);
+	});
+
+	it("should throw error when package.json not found", () => {
+		// Override the mocked cwd to point to nonexistent directory
+		process.cwd = mock(() => "/nonexistent/dir");
+
+		expect(() => localPackageSemverRange("deps-package")).toThrow();
+	});
+
+	it("should throw error when package.json is invalid", () => {
+		mock.module("/test/dir/package.json", () => ({
+			name: "invalid-package",
+			version: 10,
+		}));
+
+		expect(() => localPackageSemverRange("invalid-package")).toThrow(
+			"Invalid package.json",
+		);
+	});
+});
+
+describe("localPackageInstalledVersion", () => {
+	const originalCwd = process.cwd;
+
+	beforeEach(() => {
+		// Mock process.cwd
+		process.cwd = mock(() => "/test/dir");
+
+		// Mock various node_modules package.json files
+		mock.module("/test/dir/node_modules/normal-package/package.json", () => ({
+			name: "normal-package",
+			version: "1.2.3",
+		}));
+
+		mock.module(
+			"/test/dir/node_modules/@scope/scoped-package/package.json",
+			() => ({
+				name: "@scope/scoped-package",
+				version: "2.1.0",
+			}),
+		);
+
+		mock.module("/test/dir/node_modules/invalid-package/package.json", () => ({
+			name: "invalid-package",
+			version: 10,
+		}));
+	});
+
+	afterEach(() => {
+		mock.restore();
+		process.cwd = originalCwd;
+	});
+
+	it("should return installed version from node_modules", () => {
+		const result = localPackageInstalledVersion("normal-package");
+		expect(result).toBe("1.2.3");
+	});
+
+	it("should handle scoped packages", () => {
+		const result = localPackageInstalledVersion("@scope/scoped-package");
+		expect(result).toBe("2.1.0");
+	});
+
+	it("should throw error when package not installed", () => {
+		expect(() => localPackageInstalledVersion("nonexistent-package")).toThrow();
+	});
+
+	it("should throw error if package.json is invalid", () => {
+		expect(() => localPackageInstalledVersion("invalid-package")).toThrow(
+			"Invalid package.json",
+		);
 	});
 });

@@ -4,7 +4,14 @@ import chalk from "chalk";
 import columns from "cli-columns";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { allVersions, satisfiedVersions } from "./index";
+import { formatLocalPackageInfo, formatVersionString } from "./format";
+import {
+	allPackageVersions,
+	localPackageInstalledVersion,
+	localPackageSemverRange,
+	satisfiedPackageVersions,
+} from "./index";
+import { ignoreErrors } from "./utils";
 
 yargs(hideBin(process.argv))
 	.command(
@@ -29,17 +36,46 @@ yargs(hideBin(process.argv))
 		},
 		async ({ package: pkg, range, all }) => {
 			try {
-				if (!range || all) {
-					const versions = await allVersions(pkg, range);
-					const versionsWithColour = versions.map(({ version, satisfied }) =>
-						satisfied ? chalk.green.bold(version) : version,
+				// Always check for local package information
+				const localRange = ignoreErrors(() => localPackageSemverRange(pkg));
+				const installedVersion = ignoreErrors(() =>
+					localPackageInstalledVersion(pkg),
+				);
+
+				// Display local package info if found
+				if (localRange || installedVersion) {
+					console.log(
+						formatLocalPackageInfo(pkg, localRange, installedVersion),
 					);
+				}
+
+				// Determine what range to use and whether to show all versions
+				const effectiveRange = range || localRange;
+				const showAllVersions = all || !effectiveRange;
+
+				if (showAllVersions) {
+					// Show all versions (with highlighting if there's a range)
+					const versions = await allPackageVersions(pkg, effectiveRange);
+					const versionsWithColour = versions.map(({ version, satisfied }) => {
+						return formatVersionString(
+							version,
+							version === installedVersion,
+							satisfied,
+							!range,
+						);
+					});
 					console.log(columns(versionsWithColour, { sort: false }));
 				} else {
-					const versions = await satisfiedVersions(pkg, range);
-					const versionsWithColour = versions.map((version) =>
-						chalk.green.bold(version),
-					);
+					// Show only satisfied versions
+					const versions = await satisfiedPackageVersions(pkg, effectiveRange);
+					const versionsWithColour = versions.map((version) => {
+						return formatVersionString(
+							version,
+							version === installedVersion,
+							true,
+							!range,
+						);
+					});
 					console.log(columns(versionsWithColour, { sort: false }));
 				}
 			} catch (error) {
