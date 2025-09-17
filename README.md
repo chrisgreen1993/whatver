@@ -56,8 +56,6 @@ npx whatver lodash --show-prerelease
 ### Version Filtering
 By default, whatver excludes prerelease versions (alpha, beta, rc, etc.) to show only stable releases. Use `--show-prerelease` to include prerelease versions when needed.
 
-![screenshot](screenshot.png)
-
 ## Library Usage
 
 ### Get all versions with satisfaction status
