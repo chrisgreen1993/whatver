@@ -16,7 +16,7 @@ import { ignoreErrors } from "./utils";
 yargs(hideBin(process.argv))
 	.command(
 		"$0 <package> [range]",
-		"Check npm package versions against semver ranges (shows only matching versions by default)",
+		"Check npm package versions against semver ranges. Automatically detects local packages from package.json and shows their installed versions if available.",
 		(yargs) => {
 			return yargs
 				.positional("package", {
@@ -25,7 +25,8 @@ yargs(hideBin(process.argv))
 					demandOption: true,
 				})
 				.positional("range", {
-					describe: "The semver range to check against (optional)",
+					describe:
+						"The semver range to check against (uses local package.json range if not provided)",
 					type: "string",
 				})
 				.option("all", {
@@ -98,15 +99,18 @@ yargs(hideBin(process.argv))
 			}
 		},
 	)
-	.example("whatver lodash", "List all versions of lodash")
-	.example('whatver lodash "^1.1"', "List versions of lodash satisfying ^1.1")
 	.example(
-		'whatver lodash "^1.1" --all',
-		"List all versions of lodash with the ^1.1 range highlighted",
+		"whatver lodash",
+		"List versions of lodash (uses local semver range if found in package.json)",
+	)
+	.example('whatver lodash "^4.17"', "List versions of lodash satisfying ^4.17")
+	.example(
+		"whatver react --all",
+		"Show all react versions with local range from package.json highlighted (if installed)",
 	)
 	.example(
-		"whatver react --show-prerelease",
-		"List all versions of react including prerelease versions",
+		"whatver typescript --show-prerelease",
+		"Include prerelease versions of typescript in results",
 	)
 	.help()
 	.version()
