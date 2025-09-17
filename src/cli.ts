@@ -68,6 +68,10 @@ yargs(hideBin(process.argv))
 						effectiveRange,
 						options,
 					);
+					if (!versions.length) {
+						console.log(chalk.redBright("No versions found"));
+						return;
+					}
 					const versionsWithColour = versions.map(({ version, satisfied }) => {
 						return formatVersionString(
 							version,
@@ -84,6 +88,12 @@ yargs(hideBin(process.argv))
 						effectiveRange,
 						options,
 					);
+					if (!versions.length) {
+						console.log(
+							chalk.redBright(`No versions found for range: ${effectiveRange}`),
+						);
+						return;
+					}
 					const versionsWithColour = versions.map((version) => {
 						return formatVersionString(
 							version,
@@ -122,7 +132,7 @@ yargs(hideBin(process.argv))
 	.fail((msg, _err, yargs) => {
 		// We show the help on fail manually so its coloured correctly
 		console.log(yargs.help());
-		console.error(chalk.bold(`\nError: ${msg}`));
+		console.error(chalk.redBright(`\nError: ${msg}`));
 		process.exit(1);
 	})
 	.parse();
