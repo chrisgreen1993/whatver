@@ -44,12 +44,15 @@ type PackageInfo = Pick<
 	"name" | "description" | "homepage" | "repository"
 >;
 
-export function formatPackageInfo(packageData: PackageInfo): string {
-	let result = chalk.cyanBright.bold(packageData.name);
+export function formatPackageInfo({
+	name,
+	homepage,
+	repository,
+}: PackageInfo): string {
+	let result = chalk.cyanBright.bold(name);
 
-	// Add homepage URL in brackets if available
-	if (packageData.homepage) {
-		result += ` | ${chalk.dim(packageData.homepage)}`;
+	if (homepage || repository?.url) {
+		result += ` | ${chalk.dim(homepage || repository?.url)}`;
 	}
 
 	return result;

@@ -201,15 +201,31 @@ describe("formatPackageInfo", () => {
 		);
 	});
 
-	it("should handle package without homepage", () => {
+	it("should fallback to repository URL for package with no homepage", () => {
 		const packageData = {
 			name: "no-homepage-package",
 			description: "A package without homepage",
+			repository: {
+				type: "git",
+				url: "https://github.com/no-homepage-package/no-homepage-package",
+			},
 		};
 
 		const result = formatPackageInfo(packageData);
 		expect(result).toBe(
-			"<cyan-bright-bold>no-homepage-package</cyan-bright-bold>",
+			"<cyan-bright-bold>no-homepage-package</cyan-bright-bold> | <dim>https://github.com/no-homepage-package/no-homepage-package</dim>",
+		);
+	});
+
+	it("should handle package without homepage or repository", () => {
+		const packageData = {
+			name: "no-homepage-package-or-repository",
+			description: "A package without homepage or repository",
+		};
+
+		const result = formatPackageInfo(packageData);
+		expect(result).toBe(
+			"<cyan-bright-bold>no-homepage-package-or-repository</cyan-bright-bold>",
 		);
 	});
 });
