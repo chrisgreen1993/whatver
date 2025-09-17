@@ -15,7 +15,7 @@ import {
 	localPackageInstalledVersion,
 	localPackageSemverRange,
 	satisfiedPackageVersions,
-} from "./index";
+} from "./lib";
 import { ignoreErrors } from "./utils";
 
 yargs(hideBin(process.argv))

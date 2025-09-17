@@ -63,10 +63,10 @@ By default, whatver excludes prerelease versions (alpha, beta, rc, etc.) to show
 ### Get all versions with satisfaction status
 
 ```typescript
-import { allPackageVersions } from "whatver";
+import { allPackageVersions, type PackageVersionInfo, type PackageVersionOptions } from "whatver";
 
 // Get stable versions only (default behavior)
-const versionInfo = await allPackageVersions("lodash", "^4.14");
+const versionInfo: PackageVersionInfo[] = await allPackageVersions("lodash", "^4.14");
 // Returns: [
 //   { version: "4.14.0", satisfied: true },
 //   { version: "4.15.0", satisfied: true },
@@ -76,48 +76,41 @@ const versionInfo = await allPackageVersions("lodash", "^4.14");
 console.log(versionInfo);
 
 // Include prerelease versions
-const allVersions = await allPackageVersions("lodash", "^4.14", {
-  showPrerelease: true
-});
+const options: PackageVersionOptions = { showPrerelease: true };
+const allVersions = await allPackageVersions("lodash", "^4.14", options);
 // Also includes versions like "4.15.0-beta.1", "4.16.0-alpha.1", etc.
 ```
 
 ### Get only versions that satisfy the range
 
 ```typescript
-import { satisfiedPackageVersions } from "whatver";
+import { satisfiedPackageVersions, type PackageVersionOptions } from "whatver";
 
 // Get satisfied stable versions only (default)
-const satisfied = await satisfiedPackageVersions("lodash", "^4.14");
+const satisfied: string[] = await satisfiedPackageVersions("lodash", "^4.14");
 // Returns: ["4.14.0", "4.14.1", "4.15.0", "4.16.0", ...]
 console.log(satisfied);
 
 // Include prerelease versions that satisfy the range
-const withPrerelease = await satisfiedPackageVersions("lodash", "^4.14", {
-  showPrerelease: true
-});
+const options: PackageVersionOptions = { showPrerelease: true };
+const withPrerelease = await satisfiedPackageVersions("lodash", "^4.14", options);
 // Also includes "4.15.0-beta.1", "4.16.0-alpha.1", etc. if they satisfy ^4.14
 ```
 
-### Local Package Detection
+### TypeScript Types
 
 ```typescript
-import { localPackageSemverRange, localPackageInstalledVersion } from "whatver";
+import type { PackageVersionInfo, PackageVersionOptions } from "whatver";
 
-// Get semver range from local package.json
-try {
-  const range = localPackageSemverRange("lodash");
-  console.log(range); // "^4.17.21"
-} catch (error) {
-  console.log("Package not found in package.json");
+// Interface for version results
+interface PackageVersionInfo {
+  version: string;
+  satisfied: boolean;
 }
 
-// Get installed version from node_modules
-try {
-  const version = localPackageInstalledVersion("lodash");
-  console.log(version); // "4.17.21"
-} catch (error) {
-  console.log("Package not installed");
+// Interface for options
+interface PackageVersionOptions {
+  showPrerelease?: boolean;
 }
 ```
 

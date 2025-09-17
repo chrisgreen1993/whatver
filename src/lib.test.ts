@@ -15,7 +15,7 @@ import {
 	localPackageInstalledVersion,
 	localPackageSemverRange,
 	satisfiedPackageVersions,
-} from "./index";
+} from "./lib";
 
 let mockFetch: Mock<() => Promise<Response>>;
 

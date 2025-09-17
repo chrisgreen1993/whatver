@@ -11,31 +11,57 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The project follows a modern TypeScript architecture with source and build separation:
 
 ### Source Files (src/)
-- **src/index.ts**: Core module that exports the main functionality
-  - Uses npm registry HTTP API to fetch package versions with optimized headers
-  - Leverages the `semver` library to validate ranges and check version satisfaction
-  - Exports `allPackageVersions()` and `satisfiedPackageVersions()` functions with proper TypeScript typing
-  - Exports `localPackageSemverRange()` and `localPackageInstalledVersion()` for local package detection
-  - Includes semver range validation using `validRange()` for early error detection
+- **src/index.ts**: Public API entry point
+  - Clean re-exports of public functions: `allPackageVersions()` and `satisfiedPackageVersions()`
+  - Re-exports TypeScript types: `PackageVersionInfo` and `PackageVersionOptions`
+  - Serves as the main module entry point for library consumers
+  - Contains no implementation details, only public API surface
+  
+- **src/lib.ts**: Core implementation module
+  - Contains all implementation details moved from index.ts for better separation of concerns
+  - Uses npm registry HTTP API with optimized headers (72% smaller responses with Accept: application/vnd.npm.install-v1+json)
+  - Uses `/latest` endpoint for efficient package metadata fetching (name, description, homepage, repository)
+  - Leverages the `semver` library for validation, satisfaction checking, and prerelease detection
+  - Includes helper functions: `fetchPackageVersions()`, `fetchPackageInfo()`, `localPackageSemverRange()`, `localPackageInstalledVersion()`
+  - Contains private type guards: `isNpmManifest()`, `isPackageJSON()`, `isNpmPackumentVersion()`, `isNpmDist()`
   - Uses Node.js `require()` for filesystem access to package.json and node_modules
   
 - **src/cli.ts**: Command-line interface wrapper
-  - Uses `yargs` for modern argument parsing with proper TypeScript support
-  - Implements intelligent CLI behavior that adapts based on local package presence
-  - Uses `chalk` for colored terminal output with compound styling (green/yellow for ranges, magenta for installed)
+  - Imports from `lib.ts` for access to all functions including internal ones
+  - Uses `yargs` for modern argument parsing with proper TypeScript support and help generation
+  - Implements intelligent CLI behavior with package information display and local detection
+  - Uses `chalk` for colored terminal output with visual indicators and pipe-separated formatting
   - Uses `cli-columns` for horizontal multi-column display optimized for terminals
-  - Includes visual indicators (✔ checkmark) for installed versions with proper alignment
-  - Includes `--show-prerelease` option to control prerelease version visibility (hidden by default)
-  - Contains comprehensive error handling and help text
+  - Displays package info with format: `packagename | homepage` and local info: `./node_modules/pkg | ✔ version | range`
+  - Includes `--show-prerelease` option and `--all` flag for comprehensive version control
+  - Contains comprehensive error handling, help text, and example usage
+  
+- **src/format.ts**: Output formatting utilities
+  - `formatPackageInfo()`: Formats package name with homepage URL in pipe-separated style
+  - `formatLocalPackageInfo()`: Formats local package detection with colorized indicators
+  - `formatVersionString()`: Handles version styling with checkmarks and color coding
+  - Uses `chalk` for consistent color theming and visual hierarchy
+  - Supports different contexts: user-provided ranges vs local ranges, installed vs not installed
   
 - **src/types.ts**: TypeScript interfaces for the library
-  - `PackageVersionInfo` interface for version data with satisfaction status
-  - `PackageVersionOptions` interface for function options including prerelease control
-- **src/delcarations.d.ts**: Local type definitions for packages without official types
+  - `PackageVersionInfo` interface for version results with satisfaction status (re-exported via index.ts)
+  - `PackageVersionOptions` interface for function options including prerelease control (re-exported via index.ts)
+  - Part of the public API surface, available to library consumers
+  
+- **src/utils.ts**: Utility functions
+  - `ignoreErrors()`: Helper function for graceful error handling in CLI contexts
+  - Utility functions that support both CLI and library functionality
+  
+- **src/declarations.d.ts**: Local type definitions for packages without official types
 
 ### Build Output (dist/)
-- Compiled JavaScript files with declaration files (.d.ts)
-- Source maps for debugging
+- **dist/index.js** + **dist/index.d.ts**: Public API module for library consumers (small, clean interface)
+- **dist/lib.js** + **dist/lib.d.ts**: Internal implementation module (used by CLI, contains all functionality)
+- **dist/cli.js**: Command-line executable with full feature set
+- **dist/format.js** + **dist/format.d.ts**: Formatting utilities
+- **dist/types.js** + **dist/types.d.ts**: TypeScript interfaces
+- **dist/utils.js** + **dist/utils.d.ts**: Utility functions
+- Source maps for debugging all modules
 
 ## Development Environment
 
@@ -99,31 +125,37 @@ bun run check       # Run both linter and formatter checks
 
 ## Module Usage
 
-The library can be imported and used programmatically with full TypeScript support:
+The library provides a clean public API with full TypeScript support:
 
 ```typescript
-import { allPackageVersions, satisfiedPackageVersions, localPackageSemverRange, localPackageInstalledVersion } from "whatver";
+import { allPackageVersions, satisfiedPackageVersions, type PackageVersionInfo, type PackageVersionOptions } from "whatver";
 
 // Get all stable versions with satisfaction status (prerelease excluded by default)
-const versionInfo = await allPackageVersions("lodash", "^4.14");
+const versionInfo: PackageVersionInfo[] = await allPackageVersions("lodash", "^4.14");
 // Returns Promise<PackageVersionInfo[]> where PackageVersionInfo = { version: string, satisfied: boolean }
 console.log(versionInfo);
 
-// Include prerelease versions
-const withPrerelease = await allPackageVersions("lodash", "^4.14", { showPrerelease: true });
+// Include prerelease versions with typed options
+const options: PackageVersionOptions = { showPrerelease: true };
+const withPrerelease = await allPackageVersions("lodash", "^4.14", options);
 
 // Get only stable versions that satisfy the range
-const satisfied = await satisfiedPackageVersions("lodash", "^4.14");
+const satisfied: string[] = await satisfiedPackageVersions("lodash", "^4.14");
 // Returns Promise<string[]> - array of version strings (stable versions only)
 console.log(satisfied);
 
 // Include prerelease versions that satisfy the range
 const satisfiedWithPrerelease = await satisfiedPackageVersions("lodash", "^4.14", { showPrerelease: true });
-
-// Local package detection
-const localRange = localPackageSemverRange("lodash"); // Returns semver range from package.json
-const installedVersion = localPackageInstalledVersion("lodash"); // Returns version from node_modules
 ```
+
+### Public API Surface
+
+The public API is deliberately minimal and focused:
+
+- **Functions**: `allPackageVersions()`, `satisfiedPackageVersions()`
+- **Types**: `PackageVersionInfo`, `PackageVersionOptions`
+
+Internal functions like `localPackageSemverRange()`, `localPackageInstalledVersion()`, `fetchPackageInfo()`, and `fetchPackageVersions()` are available in `lib.ts` but not exposed as part of the public API to maintain a clean interface for library consumers.
 
 ## Key Implementation Details
 
