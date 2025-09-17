@@ -164,3 +164,24 @@ bun run type-check
 # Linting and formatting
 bun run check
 ```
+
+## Releasing
+
+This project uses [release-it](https://github.com/release-it/release-it) for automated releases:
+
+```bash
+# Test release process (dry run)
+bun run release:dry
+
+# Interactive release (choose version)
+bun run release
+```
+
+The release process will:
+- Run tests and linting checks
+- Build the project
+- Update the version in package.json
+- Create a git tag
+- Push to GitHub
+- Create a GitHub release with changelog
+- Publish to npm
