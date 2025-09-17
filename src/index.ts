@@ -1,4 +1,4 @@
-import type { Manifest, PackageJSON } from "@npm/types";
+import type { Dist, Manifest, PackageJSON, PackumentVersion } from "@npm/types";
 import { prerelease, satisfies, sort, validRange } from "semver";
 import type { PackageVersionInfo, PackageVersionOptions } from "./types";
 
@@ -22,7 +22,35 @@ function isPackageJSON(data: unknown): data is PackageJSON {
 	);
 }
 
-async function fetchPackageVersions(pkgName: string): Promise<string[]> {
+function isNpmDist(data: unknown): data is Dist {
+	return (
+		typeof data === "object" &&
+		data !== null &&
+		"shasum" in data &&
+		typeof data.shasum === "string" &&
+		"signatures" in data &&
+		Array.isArray(data.signatures) &&
+		"tarball" in data &&
+		typeof data.tarball === "string"
+	);
+}
+
+function isNpmPackumentVersion(data: unknown): data is PackumentVersion {
+	return (
+		typeof data === "object" &&
+		data !== null &&
+		"name" in data &&
+		typeof data.name === "string" &&
+		"_id" in data &&
+		typeof data._id === "string" &&
+		"dist" in data &&
+		typeof data.dist === "object" &&
+		data.dist !== null &&
+		isNpmDist(data.dist)
+	);
+}
+
+export async function fetchPackageVersions(pkgName: string): Promise<string[]> {
 	const registryUrl = `https://registry.npmjs.org/${encodeURIComponent(pkgName)}`;
 
 	try {
@@ -39,7 +67,7 @@ async function fetchPackageVersions(pkgName: string): Promise<string[]> {
 				throw new Error(`Package '${pkgName}' not found in npm registry`);
 			}
 			throw new Error(
-				`Failed to fetch package info: ${response.status} ${response.statusText}`,
+				`Failed to fetch package versions: ${response.status} ${response.statusText}`,
 			);
 		}
 
@@ -53,6 +81,38 @@ async function fetchPackageVersions(pkgName: string): Promise<string[]> {
 	} catch (error) {
 		throw new Error(
 			`Failed to fetch package versions: ${error instanceof Error ? error.message : error}`,
+			{ cause: error },
+		);
+	}
+}
+
+export async function fetchPackageInfo(
+	pkgName: string,
+): Promise<PackumentVersion> {
+	const registryUrl = `https://registry.npmjs.org/${encodeURIComponent(pkgName)}/latest`;
+
+	try {
+		const response = await fetch(registryUrl);
+
+		if (!response.ok) {
+			if (response.status === 404) {
+				throw new Error(`Package '${pkgName}' not found in npm registry`);
+			}
+			throw new Error(
+				`Failed to fetch package info: ${response.status} ${response.statusText}`,
+			);
+		}
+
+		const data = await response.json();
+
+		if (!isNpmPackumentVersion(data)) {
+			throw new Error("Invalid npm registry response format");
+		}
+
+		return data;
+	} catch (error) {
+		throw new Error(
+			`Failed to fetch package info: ${error instanceof Error ? error.message : error}`,
 			{ cause: error },
 		);
 	}

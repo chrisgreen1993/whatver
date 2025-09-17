@@ -1,3 +1,4 @@
+import type { PackumentVersion } from "@npm/types";
 import chalk from "chalk";
 
 export function formatVersionString(
@@ -24,20 +25,32 @@ export function formatLocalPackageInfo(
 	installedVersion?: string,
 ) {
 	if (!localRange && !installedVersion) {
-		return chalk.cyan(
-			`Found ${chalk.bold(pkgName)} locally with no range or installed version`,
-		);
+		return "";
 	}
-	const parts = [];
-	if (localRange) {
-		parts.push(`range: ${chalk.yellow.bold(localRange)}`);
-	}
+	let result = `./node_modules/${pkgName}`;
+
 	if (installedVersion) {
-		parts.push(
-			`installed: ${chalk.magentaBright.bold(`✔ ${installedVersion}`)}`,
-		);
+		result += ` | ${chalk.magentaBright.bold(`✔ ${installedVersion}`)}`;
 	}
-	return chalk.cyan(
-		`Found ${chalk.bold(pkgName)} locally with ${parts.join(", ")}`,
-	);
+	if (localRange) {
+		result += ` | ${chalk.yellowBright.bold(localRange)}`;
+	}
+
+	return chalk.cyan(result);
+}
+
+type PackageInfo = Pick<
+	PackumentVersion,
+	"name" | "description" | "homepage" | "repository"
+>;
+
+export function formatPackageInfo(packageData: PackageInfo): string {
+	let result = chalk.cyanBright.bold(packageData.name);
+
+	// Add homepage URL in brackets if available
+	if (packageData.homepage) {
+		result += ` | ${chalk.dim(packageData.homepage)}`;
+	}
+
+	return result;
 }

@@ -7,8 +7,11 @@ import {
 	type Mock,
 	mock,
 } from "bun:test";
+import type { PackumentVersion } from "@npm/types";
 import {
 	allPackageVersions,
+	fetchPackageInfo,
+	fetchPackageVersions,
 	localPackageInstalledVersion,
 	localPackageSemverRange,
 	satisfiedPackageVersions,
@@ -129,7 +132,7 @@ describe("allVersions", () => {
 		);
 
 		expect(allPackageVersions("test-package")).rejects.toThrow(
-			"Failed to fetch package versions: Failed to fetch package info: 500 Internal Server Error",
+			"Failed to fetch package versions: Failed to fetch package versions: 500 Internal Server Error",
 		);
 	});
 
@@ -396,6 +399,130 @@ describe("satisfiedPackageVersions", () => {
 		});
 
 		expect(result).toEqual(["1.0.0", "1.1.0", "1.2.0", "1.3.0-beta.1"]);
+	});
+});
+
+describe("fetchPackageVersions", () => {
+	beforeEach(() => {
+		mockFetch = mock(() => Promise.resolve(new Response()));
+		global.fetch = mockFetch as unknown as typeof fetch;
+	});
+
+	afterEach(() => {
+		mockFetch.mockClear();
+	});
+
+	it("should return array of version strings", async () => {
+		const mockResponse = {
+			versions: {
+				"1.0.0": {},
+				"1.1.0": {},
+				"2.0.0": {},
+			},
+		};
+
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify(mockResponse), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			),
+		);
+
+		const result = await fetchPackageVersions("test-package");
+
+		expect(result).toEqual(["1.0.0", "1.1.0", "2.0.0"]);
+	});
+
+	it("should handle 404 errors", async () => {
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify({ error: "Not Found" }), {
+					status: 404,
+					statusText: "Not Found",
+				}),
+			),
+		);
+
+		expect(fetchPackageVersions("nonexistent-package")).rejects.toThrow(
+			"Failed to fetch package versions: Package 'nonexistent-package' not found in npm registry",
+		);
+	});
+});
+
+describe("fetchPackageInfo", () => {
+	beforeEach(() => {
+		mockFetch = mock(() => Promise.resolve(new Response()));
+		global.fetch = mockFetch as unknown as typeof fetch;
+	});
+
+	afterEach(() => {
+		mockFetch.mockClear();
+	});
+
+	it("should return package info with metadata", async () => {
+		const mockResponse: PackumentVersion = {
+			_id: "test-package@1.2.3",
+			name: "test-package",
+			version: "1.2.3",
+			description: "A test package for unit testing",
+			homepage: "https://example.com",
+			repository: {
+				type: "git",
+				url: "https://github.com/test/test-package",
+			},
+			_npmVersion: "",
+			dist: {
+				shasum: "",
+				signatures: [],
+				tarball: "",
+			},
+		};
+
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify(mockResponse), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			),
+		);
+
+		const result = await fetchPackageInfo("test-package");
+
+		expect(result).toEqual({
+			_id: "test-package@1.2.3",
+			name: "test-package",
+			description: "A test package for unit testing",
+			homepage: "https://example.com",
+			repository: {
+				type: "git",
+				url: "https://github.com/test/test-package",
+			},
+			_npmVersion: "",
+			dist: {
+				shasum: "",
+				signatures: [],
+				tarball: "",
+			},
+			version: "1.2.3",
+		});
+	});
+
+	it("should handle 404 errors", async () => {
+		mockFetch.mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify({ error: "Not Found" }), {
+					status: 404,
+					statusText: "Not Found",
+				}),
+			),
+		);
+
+		expect(fetchPackageInfo("nonexistent-package")).rejects.toThrow(
+			"Failed to fetch package info: Package 'nonexistent-package' not found in npm registry",
+		);
 	});
 });
 

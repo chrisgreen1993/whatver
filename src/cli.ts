@@ -4,9 +4,14 @@ import chalk from "chalk";
 import columns from "cli-columns";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { formatLocalPackageInfo, formatVersionString } from "./format";
+import {
+	formatLocalPackageInfo,
+	formatPackageInfo,
+	formatVersionString,
+} from "./format";
 import {
 	allPackageVersions,
+	fetchPackageInfo,
 	localPackageInstalledVersion,
 	localPackageSemverRange,
 	satisfiedPackageVersions,
@@ -42,13 +47,15 @@ yargs(hideBin(process.argv))
 		},
 		async ({ package: pkg, range, all, "show-prerelease": showPrerelease }) => {
 			try {
+				const packageInfo = await fetchPackageInfo(pkg);
 				// Always check for local package information
 				const localRange = ignoreErrors(() => localPackageSemverRange(pkg));
 				const installedVersion = ignoreErrors(() =>
 					localPackageInstalledVersion(pkg),
 				);
 
-				// Display local package info if found
+				// Fetch and display package information
+				console.log(formatPackageInfo(packageInfo));
 				if (localRange || installedVersion) {
 					console.log(
 						formatLocalPackageInfo(pkg, localRange, installedVersion),
