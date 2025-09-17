@@ -1,18 +1,20 @@
 # whatver
 
-A modern CLI tool and Node.js library for checking npm package versions against semver ranges. Built with TypeScript and Bun for fast performance and excellent developer experience.
+A simple Node.js cli tool for checking semver ranges of npm packages, similar to [https://semver.npmjs.com/](https://semver.npmjs.com/) but in your terminal. 
 
-## Features
+As well as checking package versions on the registry, it will also display the currently installed package version in your `node_modules` and the semver range from `package.json`.
 
-- 🚀 **Fast**: Uses npm registry HTTP API with optimized headers for 72% smaller responses
-- 🧠 **Smart CLI**: Automatically detects local packages and their semver ranges
-- 📦 **Two APIs**: Get all versions with satisfaction status, or only satisfied versions
-- 🔍 **Smart Validation**: Early semver range validation with helpful error messages
-- 📊 **Sorted Output**: Automatic version sorting for consistent results
-- 🎨 **Visual Indicators**: Color-coded output with icons for installed versions
-- 🖥️ **Column Display**: Horizontal column output optimized for terminal viewing
-- ✅ **Well Tested**: Comprehensive test suite covering all edge cases
-- 📘 **TypeScript**: Full type safety and IntelliSense support
+## Installation
+
+```bash
+# For CLI usage
+npm install -g whatver
+# or
+npx whatver
+
+# For library usage  
+npm install whatver
+```
 
 ## CLI Usage
 
@@ -28,8 +30,9 @@ npx whatver lodash "^4.14"
 npx whatver lodash --show-prerelease
 ```
 
-### Smart Local Package Detection
-When run in a project directory, whatver automatically detects local packages:
+### Local Package Detection
+
+When run in a directory with a package.json, whatver automatically detects local packages:
 
 ```bash
 # In a project with lodash in package.json
@@ -47,18 +50,13 @@ npx whatver lodash --all
 npx whatver lodash --show-prerelease
 ```
 
-### Visual Indicators
-- **✔** (magenta): Installed version from node_modules
-- **Green**: Versions satisfying provided semver range
-- **Yellow**: Versions satisfying local package.json range
-- **Gray**: Versions not satisfying any range
-
 ### Version Filtering
+
 By default, whatver excludes prerelease versions (alpha, beta, rc, etc.) to show only stable releases. Use `--show-prerelease` to include prerelease versions when needed.
 
 ## Library Usage
 
-### Get all versions with satisfaction status
+### List all versions and whether the semver range is satisfied for that version.
 
 ```typescript
 import { allPackageVersions, type PackageVersionInfo, type PackageVersionOptions } from "whatver";
@@ -79,7 +77,7 @@ const allVersions = await allPackageVersions("lodash", "^4.14", options);
 // Also includes versions like "4.15.0-beta.1", "4.16.0-alpha.1", etc.
 ```
 
-### Get only versions that satisfy the range
+### List only versions that satisfy the semver range
 
 ```typescript
 import { satisfiedPackageVersions, type PackageVersionOptions } from "whatver";
@@ -132,40 +130,34 @@ try {
 }
 ```
 
-## Installation
-
-```bash
-# For CLI usage
-npm install -g whatver
-
-# For library usage  
-npm install whatver
-```
-
 ## Development
 
-This project uses Bun and DevBox for development:
+This project uses [Bun](https://bun.com/) and [devbox](https://www.jetify.com/docs/devbox/) for development:
+
 
 ```bash
-# Install dependencies
+# Installs bun to isolated env
+devbox install
+# enter our shell
+devbox shell
+
+# install dependenices
 bun install
 
-# Build the project
-bun run build
+# run cli
+bun run src/cli.ts
 
-# Run tests
+# run tests
 bun test
 
-# Type checking
-bun run type-check
+# type checking
+bun type-check
 
-# Linting and formatting
-bun run check
+# check linting and formatting
+bun check
 ```
 
 ## Releasing
-
-This project uses [release-it](https://github.com/release-it/release-it) for automated releases:
 
 ```bash
 # Test release process (dry run)
