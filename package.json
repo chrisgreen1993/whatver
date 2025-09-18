@@ -20,7 +20,7 @@
     "release:dry-run": "release-it --dry-run"
   },
   "author": "Chris Green",
-  "license": "ISC",
+  "license": "MIT",
   "bin": {
     "whatver": "dist/cli.js"
   },
