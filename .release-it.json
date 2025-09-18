@@ -11,7 +11,7 @@
     "release": true
   },
   "hooks": {
-    "before:init": "bun run type-check && bun run check && bun test",
+    "before:init": "bun install && bun run type-check && bun run check && bun test",
     "after:bump": "bun run build"
   }
 }
