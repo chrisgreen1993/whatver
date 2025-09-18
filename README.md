@@ -1,6 +1,6 @@
 # whatver
 
-A simple Node.js cli tool for checking semver ranges of npm packages, similar to [https://semver.npmjs.com/](https://semver.npmjs.com/) but in your terminal. 
+A simple Node.js cli tool for checking semver ranges of npm packages, similar to [https://semver.npmjs.com/](https://semver.npmjs.com/), but in the comfort of your terminal. 
 
 As well as checking package versions on the registry, it will also display the currently installed package version in your `node_modules` and the semver range from `package.json`.
 
@@ -134,13 +134,12 @@ try {
 
 ## Development
 
-This project uses [Bun](https://bun.com/) and [devbox](https://www.jetify.com/docs/devbox/) for development:
+This project uses [Bun](https://bun.com/) and [devbox](https://www.jetify.com/docs/devbox/) (optional) for development:
 
 
 ```bash
-# Installs bun to isolated env
+# Installs bun to isolated env & enters it (optional)
 devbox install
-# enter our shell
 devbox shell
 
 # install dependenices
