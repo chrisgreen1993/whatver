@@ -4,6 +4,8 @@ A simple Node.js cli tool for checking semver ranges of npm packages, similar to
 
 As well as checking package versions on the registry, it will also display the currently installed package version in your `node_modules` and the semver range from `package.json`.
 
+![screenshot](screenshot.png)
+
 ## Installation
 
 ```bash
