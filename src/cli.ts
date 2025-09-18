@@ -4,6 +4,7 @@ import chalk from "chalk";
 import columns from "cli-columns";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { version } from "../package.json";
 import {
 	formatLocalPackageInfo,
 	formatPackageInfo,
@@ -130,7 +131,7 @@ yargs(hideBin(process.argv))
 		"Include prerelease versions of typescript in results",
 	)
 	.help()
-	.version()
+	.version(version)
 	.alias("help", "h")
 	.alias("version", "v")
 	.alias("all", "a")
