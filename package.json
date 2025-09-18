@@ -6,8 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build src/index.ts src/cli.ts --outdir dist --target node && bun run build:dts",
-    "build:dts": "bun run tsc --emitDeclarationOnly --project tsconfig.types.json",
+    "build": "bun run build.ts",
     "type-check": "bun run tsc --noEmit",
     "test": "bun test",
     "lint": "biome lint src",
@@ -54,6 +53,7 @@
     "@types/bun": "^1.2.21",
     "@types/semver": "^7.7.1",
     "@types/yargs": "^17.0.33",
+    "bun-plugin-dts": "^0.3.0",
     "release-it": "^19.0.4",
     "typescript": "^5.9.2"
   },
