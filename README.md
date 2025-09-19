@@ -4,7 +4,7 @@ A simple Node.js cli tool for checking semver ranges of npm packages, similar to
 
 As well as checking package versions on the registry, it will also display the currently installed package version in your `node_modules` and the semver range from `package.json`.
 
-![screenshot](screenshot.png)
+![demo](demo.gif)
 
 ## Installation
 
@@ -28,6 +28,9 @@ npx whatver lodash
 # Show versions matching a specific range
 npx whatver lodash "^4.14"
 
+# Show all versions
+npx whatver lodash "^4.14" --all
+
 # Include prerelease versions (alpha, beta, rc, etc.)
 npx whatver lodash --show-prerelease
 ```
@@ -47,9 +50,6 @@ npx whatver lodash "^4.0.0"
 
 # Show all versions with local range highlighted
 npx whatver lodash --all
-
-# Include prerelease versions in local package analysis
-npx whatver lodash --show-prerelease
 ```
 
 ### Version Filtering
