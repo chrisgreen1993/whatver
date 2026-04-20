@@ -54,7 +54,7 @@
     "@types/semver": "^7.7.1",
     "@types/yargs": "^17.0.33",
     "bun-plugin-dts": "^0.3.0",
-    "release-it": "^19.0.4",
+    "release-it": "^20.0.0",
     "typescript": "^5.9.2"
   },
   "files": [
